@@ -1,2 +1,2 @@
-#WalkIn
-A fullstack Spring Boot application to help you conduct Walk-In Drive.
+# WalkIn
+WalkIn is a full-stack application built with Spring Boot and React to help organizations conduct Walk-In Drives for recruitment.
