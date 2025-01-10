@@ -1,8 +1,6 @@
 package com.walkin.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
 
 import java.time.LocalDateTime;
 
@@ -15,21 +13,38 @@ public class StudentApplication {
     @Column(name = "application_id", nullable = false)
     private Integer applicationId;
     
-    @Setter
-    @Getter
     @ManyToOne
     @JoinColumn(name = "student_id", referencedColumnName = "student_id", nullable = false)
     private Student student;
     
-    @Setter
-    @Getter
     @ManyToOne
     @JoinColumn(name = "company_id", referencedColumnName = "company_id", nullable = false)
     private Company company;
     
-    @Setter
-    @Getter
     @Column(name = "application_date", nullable = false)
     private LocalDateTime applicationDate;
     
+    public Student getStudent() {
+        return student;
+    }
+    
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+    
+    public Company getCompany() {
+        return company;
+    }
+    
+    public void setCompany(Company company) {
+        this.company = company;
+    }
+    
+    public LocalDateTime getApplicationDate() {
+        return applicationDate;
+    }
+    
+    public void setApplicationDate(LocalDateTime applicationDate) {
+        this.applicationDate = applicationDate;
+    }
 }
