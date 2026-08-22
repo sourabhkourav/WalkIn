@@ -1,16 +1,21 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.StudentRoundSelection;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.StudentRoundSelectionRepository;
 import com.walkin.service.StudentRoundSelectionService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class StudentRoundSelectionServiceImpl implements StudentRoundSelectionService {
 	
-	@Autowired
-	private StudentRoundSelectionRepository studentRoundSelectionRepository;
+	private final StudentRoundSelectionRepository studentRoundSelectionRepository;
+
+	public StudentRoundSelectionServiceImpl(StudentRoundSelectionRepository studentRoundSelectionRepository) {
+		this.studentRoundSelectionRepository = studentRoundSelectionRepository;
+	}
 	
 	@Override
 	public StudentRoundSelection createStudentRoundSelection(StudentRoundSelection studentRoundSelection) {
@@ -20,7 +25,12 @@ public class StudentRoundSelectionServiceImpl implements StudentRoundSelectionSe
 	@Override
 	public StudentRoundSelection getStudentRoundSelectionById(Integer selectionId) {
 		return studentRoundSelectionRepository.findById(selectionId)
-				       .orElseThrow(() -> new RuntimeException("Student Round Selection not found with Id: " + selectionId));
+				       .orElseThrow(() -> new ResourceNotFoundException("Student round selection not found with ID: " + selectionId));
+	}
+
+	@Override
+	public List<StudentRoundSelection> getAllStudentRoundSelections() {
+		return studentRoundSelectionRepository.findAll();
 	}
 	
 	@Override
@@ -34,6 +44,6 @@ public class StudentRoundSelectionServiceImpl implements StudentRoundSelectionSe
 	
 	@Override
 	public void deleteStudentRoundSelection(Integer selectionId) {
-		studentRoundSelectionRepository.deleteById(selectionId);
+		studentRoundSelectionRepository.delete(getStudentRoundSelectionById(selectionId));
 	}
 }

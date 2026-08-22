@@ -1,9 +1,9 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.Company;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CompanyRepository;
 import com.walkin.service.CompanyService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -11,8 +11,11 @@ import java.util.List;
 @Service
 public class CompanyServiceImpl implements CompanyService {
 	
-	@Autowired
-	private CompanyRepository companyRepository;
+	private final CompanyRepository companyRepository;
+
+	public CompanyServiceImpl(CompanyRepository companyRepository) {
+		this.companyRepository = companyRepository;
+	}
 	
 	@Override
 	public Company createCompany(Company company) {
@@ -22,7 +25,7 @@ public class CompanyServiceImpl implements CompanyService {
 	@Override
 	public Company getCompanyById(Integer companyId) {
 		return companyRepository.findById(companyId)
-				       .orElseThrow(() -> new RuntimeException("Company not found with Id: " + companyId));
+				       .orElseThrow(() -> new ResourceNotFoundException("Company not found with ID: " + companyId));
 	}
 	
 	@Override
@@ -42,6 +45,6 @@ public class CompanyServiceImpl implements CompanyService {
 	
 	@Override
 	public void deleteCompany(Integer companyId) {
-		companyRepository.deleteById(companyId);
+		companyRepository.delete(getCompanyById(companyId));
 	}
 }

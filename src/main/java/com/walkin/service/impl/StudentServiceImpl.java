@@ -1,17 +1,21 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.Student;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.StudentRepository;
 import com.walkin.service.StudentService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class StudentServiceImpl implements StudentService {
 	
-	@Autowired
-	private StudentRepository studentRepository;
-	
+	private final StudentRepository studentRepository;
+
+	public StudentServiceImpl(StudentRepository studentRepository) {
+		this.studentRepository = studentRepository;
+	}
 	
 	@Override
 	public Student createStudent(Student student) {
@@ -21,7 +25,7 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	public Student getStudentById(Integer studentId) {
 		return studentRepository.findById(studentId)
-				       .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
+				       .orElseThrow(() -> new ResourceNotFoundException("Student not found with ID: " + studentId));
 	}
 	
 	@Override
@@ -42,6 +46,6 @@ public class StudentServiceImpl implements StudentService {
 	
 	@Override
 	public void deleteStudent(Integer studentId) {
-		studentRepository.deleteById(studentId);
+		studentRepository.delete(getStudentById(studentId));
 	}
 }

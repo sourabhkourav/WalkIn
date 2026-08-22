@@ -1,16 +1,21 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.InterviewRound;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.InterviewRoundRepository;
 import com.walkin.service.InterviewRoundService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class InterviewRoundServiceImpl implements InterviewRoundService {
 	
-	@Autowired
-	private InterviewRoundRepository interviewRoundRepository;
+	private final InterviewRoundRepository interviewRoundRepository;
+
+	public InterviewRoundServiceImpl(InterviewRoundRepository interviewRoundRepository) {
+		this.interviewRoundRepository = interviewRoundRepository;
+	}
 	
 	@Override
 	public InterviewRound createInterviewRound(InterviewRound interviewRound) {
@@ -20,7 +25,12 @@ public class InterviewRoundServiceImpl implements InterviewRoundService {
 	@Override
 	public InterviewRound getInterviewRoundById(Integer roundId) {
 		return interviewRoundRepository.findById(roundId)
-				       .orElseThrow(() -> new RuntimeException("Interview Round not found with Id: " + roundId));
+				       .orElseThrow(() -> new ResourceNotFoundException("Interview round not found with ID: " + roundId));
+	}
+
+	@Override
+	public List<InterviewRound> getAllInterviewRounds() {
+		return interviewRoundRepository.findAll();
 	}
 	
 	@Override
@@ -33,6 +43,6 @@ public class InterviewRoundServiceImpl implements InterviewRoundService {
 	
 	@Override
 	public void deleteInterviewRound(Integer roundId) {
-		interviewRoundRepository.deleteById(roundId);
+		interviewRoundRepository.delete(getInterviewRoundById(roundId));
 	}
 }

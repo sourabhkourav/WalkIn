@@ -1,16 +1,21 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.StudentApplication;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.StudentApplicationRepository;
 import com.walkin.service.StudentApplicationService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class StudentApplicationServiceImpl implements StudentApplicationService {
 	
-	@Autowired
-	private StudentApplicationRepository studentApplicationRepository;
+	private final StudentApplicationRepository studentApplicationRepository;
+
+	public StudentApplicationServiceImpl(StudentApplicationRepository studentApplicationRepository) {
+		this.studentApplicationRepository = studentApplicationRepository;
+	}
 	
 	@Override
 	public StudentApplication createStudentApplication(StudentApplication studentApplication) {
@@ -20,13 +25,20 @@ public class StudentApplicationServiceImpl implements StudentApplicationService 
 	@Override
 	public StudentApplication getStudentApplicationById(Integer applicationId) {
 		return studentApplicationRepository.findById(applicationId)
-				       .orElseThrow(() -> new RuntimeException("Student Application not found with Id: " + applicationId));
+				       .orElseThrow(() -> new ResourceNotFoundException("Student application not found with ID: " + applicationId));
+	}
+
+	@Override
+	public List<StudentApplication> getAllStudentApplications() {
+		return studentApplicationRepository.findAll();
 	}
 	
 	@Override
 	public StudentApplication updateStudentApplication(Integer applicationId, StudentApplication updateStudentApplication) {
 		StudentApplication studentApplication = getStudentApplicationById(applicationId);
-		studentApplication.setApplicationDate(updateStudentApplication.getApplicationDate());
+		if (updateStudentApplication.getApplicationDate() != null) {
+			studentApplication.setApplicationDate(updateStudentApplication.getApplicationDate());
+		}
 		studentApplication.setCompany(updateStudentApplication.getCompany());
 		studentApplication.setStudent(updateStudentApplication.getStudent());
 		return studentApplicationRepository.save(studentApplication);
@@ -34,6 +46,6 @@ public class StudentApplicationServiceImpl implements StudentApplicationService 
 	
 	@Override
 	public void deleteStudentApplication(Integer applicationId) {
-		studentApplicationRepository.deleteById(applicationId);
+		studentApplicationRepository.delete(getStudentApplicationById(applicationId));
 	}
 }
