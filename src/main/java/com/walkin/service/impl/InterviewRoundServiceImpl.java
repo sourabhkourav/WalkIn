@@ -7,6 +7,7 @@ import com.walkin.service.InterviewRoundService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class InterviewRoundServiceImpl implements InterviewRoundService {
@@ -31,6 +32,12 @@ public class InterviewRoundServiceImpl implements InterviewRoundService {
 	@Override
 	public List<InterviewRound> getAllInterviewRounds() {
 		return interviewRoundRepository.findAll();
+	}
+
+	@Override public Page<InterviewRound> getInterviewRounds(String query, Pageable pageable) {
+		String value = query == null ? "" : query.trim();
+		return value.isEmpty() ? interviewRoundRepository.findAll(pageable)
+				: interviewRoundRepository.findByRoundNameContainingIgnoreCase(value, pageable);
 	}
 	
 	@Override

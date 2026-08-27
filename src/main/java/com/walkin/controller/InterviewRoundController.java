@@ -2,6 +2,8 @@ package com.walkin.controller;
 
 import com.walkin.entity.InterviewRound;
 import com.walkin.service.InterviewRoundService;
+import com.walkin.config.PageRequestFactory;
+import com.walkin.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.List;
 public class InterviewRoundController {
 
     private final InterviewRoundService interviewRoundService;
+    private final PageRequestFactory pages;
 
-    public InterviewRoundController(InterviewRoundService interviewRoundService) {
+    public InterviewRoundController(InterviewRoundService interviewRoundService, PageRequestFactory pages) {
         this.interviewRoundService = interviewRoundService;
+        this.pages = pages;
     }
 
     @PostMapping
@@ -31,8 +35,12 @@ public class InterviewRoundController {
     }
 
     @GetMapping
-    public ResponseEntity<List<InterviewRound>> getAll() {
-        return ResponseEntity.ok(interviewRoundService.getAllInterviewRounds());
+    public ResponseEntity<PageResponse<InterviewRound>> getAll(
+            @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size,
+            @RequestParam(defaultValue="roundId") String sort, @RequestParam(defaultValue="asc") String direction,
+            @RequestParam(required=false) String query) {
+        return ResponseEntity.ok(PageResponse.from(interviewRoundService.getInterviewRounds(query,
+                pages.create(page, size, sort, direction, java.util.Set.of("roundId", "roundName")))));
     }
 
     @PutMapping("/{id}")

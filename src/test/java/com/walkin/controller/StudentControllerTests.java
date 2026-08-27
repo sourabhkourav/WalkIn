@@ -65,4 +65,12 @@ class StudentControllerTests {
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Student not found with ID: 999999"));
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void invalidPaginationIsRejected() throws Exception {
+        mockMvc.perform(get("/api/students?size=101&sort=studentId"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("size must be between 1 and 100"));
+    }
 }

@@ -1,6 +1,8 @@
 package com.walkin.controller;
 
 import com.walkin.dto.CompanyRoundRequest;
+import com.walkin.dto.PageResponse;
+import com.walkin.config.PageRequestFactory;
 import com.walkin.entity.CompanyCustomRound;
 import com.walkin.service.CompanyCustomRoundService;
 import com.walkin.service.CompanyService;
@@ -19,14 +21,16 @@ public class CompanyRoundController {
     private final CompanyCustomRoundService companyRoundService;
     private final CompanyService companyService;
     private final InterviewRoundService interviewRoundService;
+    private final PageRequestFactory pages;
 
     public CompanyRoundController(
             CompanyCustomRoundService companyRoundService,
             CompanyService companyService,
-            InterviewRoundService interviewRoundService) {
+            InterviewRoundService interviewRoundService, PageRequestFactory pages) {
         this.companyRoundService = companyRoundService;
         this.companyService = companyService;
         this.interviewRoundService = interviewRoundService;
+        this.pages = pages;
     }
 
     @PostMapping
@@ -41,8 +45,11 @@ public class CompanyRoundController {
     }
 
     @GetMapping
-    public ResponseEntity<List<CompanyCustomRound>> getAll() {
-        return ResponseEntity.ok(companyRoundService.getAllCompanyCustomRounds());
+    public ResponseEntity<PageResponse<CompanyCustomRound>> getAll(
+            @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size,
+            @RequestParam(defaultValue="companyRoundId") String sort, @RequestParam(defaultValue="asc") String direction) {
+        return ResponseEntity.ok(PageResponse.from(companyRoundService.getCompanyCustomRounds(
+                pages.create(page,size,sort,direction,java.util.Set.of("companyRoundId")))));
     }
 
     @PutMapping("/{id}")

@@ -89,6 +89,8 @@ Content-Type: application/json
 | Student round decisions | `/api/round-selections` |
 
 Each resource supports `POST`, `GET` collection, `GET /{id}`, `PUT /{id}`, and `DELETE /{id}`.
+Student, company, and interview-round collections accept `page`, `size` (maximum 100), `sort`,
+`direction`, and `query` parameters. Collection responses include content and page metadata.
 Relationship requests use IDs. For example, assigning a round to a company uses:
 
 ```json
@@ -119,7 +121,7 @@ Work through these items in order:
 3. **Completed:** Add OpenAPI documentation and Swagger UI, including authentication setup.
 4. **Completed:** Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
    and token-based authentication.
-5. Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
+5. **Completed:** Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
 6. Add CI that runs `./mvnw test` and builds the Docker image for every pull request.
 7. Add observability and deployment safeguards: Actuator health checks, structured logs, metrics,
    production profiles, HTTPS, backups, and secret-manager integration.

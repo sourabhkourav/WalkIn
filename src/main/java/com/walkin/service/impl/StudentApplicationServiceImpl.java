@@ -7,6 +7,7 @@ import com.walkin.service.StudentApplicationService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class StudentApplicationServiceImpl implements StudentApplicationService {
@@ -32,6 +33,7 @@ public class StudentApplicationServiceImpl implements StudentApplicationService 
 	public List<StudentApplication> getAllStudentApplications() {
 		return studentApplicationRepository.findAll();
 	}
+	@Override public Page<StudentApplication> getStudentApplications(Pageable pageable) { return studentApplicationRepository.findAll(pageable); }
 	
 	@Override
 	public StudentApplication updateStudentApplication(Integer applicationId, StudentApplication updateStudentApplication) {

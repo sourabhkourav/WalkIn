@@ -7,6 +7,7 @@ import com.walkin.service.StudentService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class StudentServiceImpl implements StudentService {
@@ -47,5 +48,11 @@ public class StudentServiceImpl implements StudentService {
 	@Override
 	public void deleteStudent(Integer studentId) {
 		studentRepository.delete(getStudentById(studentId));
+	}
+
+	@Override public Page<Student> getStudents(String query, Pageable pageable) {
+		String value = query == null ? "" : query.trim();
+		return value.isEmpty() ? studentRepository.findAll(pageable)
+				: studentRepository.findByFirstNameContainingIgnoreCaseOrLastNameContainingIgnoreCaseOrEmailContainingIgnoreCase(value, value, value, pageable);
 	}
 }

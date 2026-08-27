@@ -7,6 +7,7 @@ import com.walkin.service.CompanyService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class CompanyServiceImpl implements CompanyService {
@@ -46,5 +47,11 @@ public class CompanyServiceImpl implements CompanyService {
 	@Override
 	public void deleteCompany(Integer companyId) {
 		companyRepository.delete(getCompanyById(companyId));
+	}
+
+	@Override public Page<Company> getCompanies(String query, Pageable pageable) {
+		String value = query == null ? "" : query.trim();
+		return value.isEmpty() ? companyRepository.findAll(pageable)
+				: companyRepository.findByCompanyNameContainingIgnoreCaseOrEmailContainingIgnoreCase(value, value, pageable);
 	}
 }

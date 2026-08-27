@@ -2,6 +2,8 @@ package com.walkin.controller;
 
 import com.walkin.entity.Company;
 import com.walkin.service.CompanyService;
+import com.walkin.config.PageRequestFactory;
+import com.walkin.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -21,9 +24,11 @@ import java.util.List;
 public class CompanyController {
 
 	private final CompanyService companyService;
+	private final PageRequestFactory pages;
 
-	public CompanyController(CompanyService companyService) {
+	public CompanyController(CompanyService companyService, PageRequestFactory pages) {
 		this.companyService = companyService;
+		this.pages = pages;
 	}
 
 	@PostMapping
@@ -37,8 +42,12 @@ public class CompanyController {
 	}
 
 	@GetMapping
-	public ResponseEntity<List<Company>> getCompanies() {
-		return ResponseEntity.ok(companyService.getAllCompanies());
+	public ResponseEntity<PageResponse<Company>> getCompanies(
+			@RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="20") int size,
+			@RequestParam(defaultValue="companyId") String sort, @RequestParam(defaultValue="asc") String direction,
+			@RequestParam(required=false) String query) {
+		return ResponseEntity.ok(PageResponse.from(companyService.getCompanies(query,
+				pages.create(page, size, sort, direction, java.util.Set.of("companyId", "companyName", "email")))));
 	}
 
 	@PutMapping("/{id}")

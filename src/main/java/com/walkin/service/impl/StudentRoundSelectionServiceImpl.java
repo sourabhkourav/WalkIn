@@ -7,6 +7,7 @@ import com.walkin.service.StudentRoundSelectionService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class StudentRoundSelectionServiceImpl implements StudentRoundSelectionService {
@@ -32,6 +33,7 @@ public class StudentRoundSelectionServiceImpl implements StudentRoundSelectionSe
 	public List<StudentRoundSelection> getAllStudentRoundSelections() {
 		return studentRoundSelectionRepository.findAll();
 	}
+	@Override public Page<StudentRoundSelection> getStudentRoundSelections(Pageable pageable) { return studentRoundSelectionRepository.findAll(pageable); }
 	
 	@Override
 	public StudentRoundSelection updateStudentRoundSelection(Integer selectionId, StudentRoundSelection updateStudentRoundSelection) {

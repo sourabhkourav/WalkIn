@@ -7,6 +7,7 @@ import com.walkin.service.CompanyCustomRoundService;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import org.springframework.data.domain.*;
 
 @Service
 public class CompanyCustomRoundServiceImpl implements CompanyCustomRoundService {
@@ -32,6 +33,7 @@ public class CompanyCustomRoundServiceImpl implements CompanyCustomRoundService 
 	public List<CompanyCustomRound> getAllCompanyCustomRounds() {
 		return companyCustomRoundRepository.findAll();
 	}
+	@Override public Page<CompanyCustomRound> getCompanyCustomRounds(Pageable pageable) { return companyCustomRoundRepository.findAll(pageable); }
 	
 	@Override
 	public CompanyCustomRound updateCompanyCustomRound(Integer companyRoundId, CompanyCustomRound updateCompanyCustomRound) {
