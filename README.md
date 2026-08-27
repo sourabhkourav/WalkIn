@@ -67,6 +67,14 @@ PostgreSQL compatibility mode. A local database, Docker, and `.env` file are not
 .\mvnw.cmd test
 ```
 
+## Continuous integration
+
+GitHub Actions runs the complete Maven verification suite on Java 25 for pushes and pull requests.
+The Linux runner provides Docker, so the PostgreSQL Testcontainers test runs instead of being
+skipped. CI also validates `compose.yaml` and builds the production image without publishing it.
+Failed test reports are retained as workflow artifacts for seven days. Dependabot checks Maven,
+GitHub Actions, and Docker dependencies weekly.
+
 ## REST endpoints
 
 All resource endpoints require a JWT bearer token. `ADMIN` can read and modify resources;
@@ -122,7 +130,7 @@ Work through these items in order:
 4. **Completed:** Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
    and token-based authentication.
 5. **Completed:** Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
-6. Add CI that runs `./mvnw test` and builds the Docker image for every pull request.
+6. **Completed:** Add CI that runs the Maven verification suite and builds the Docker image for every pull request.
 7. Add observability and deployment safeguards: Actuator health checks, structured logs, metrics,
    production profiles, HTTPS, backups, and secret-manager integration.
 
