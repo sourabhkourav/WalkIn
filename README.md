@@ -12,11 +12,13 @@ companies, interview rounds, applications, and round-by-round selection decision
 - Flyway database migrations
 - Spring Security with stateless HTTP Basic authentication
 - Maven Wrapper
-- H2 for isolated automated tests
+- JUnit and Mockito for automated tests
+- H2 for isolated integration tests
+- Docker and Docker Compose
 
-## Run locally
+## Run with Docker
 
-Requirements: JDK 25 and Docker Desktop (or a separately managed PostgreSQL 18 server).
+Docker Desktop is the only requirement for running the complete stack.
 
 1. Create your local environment file:
 
@@ -27,25 +29,38 @@ Requirements: JDK 25 and Docker Desktop (or a separately managed PostgreSQL 18 s
 2. Replace every placeholder password in `.env`. The file is ignored by Git and is read by both
    Docker Compose and Spring Boot.
 
-3. Start PostgreSQL:
+3. Build and start the API and PostgreSQL:
 
    ```powershell
-   docker compose up -d
+   docker compose up --build
    ```
 
-4. Start the API:
+4. The API is available at `http://localhost:8080`. Authenticate with the
+   `APP_SECURITY_USERNAME` and `APP_SECURITY_PASSWORD` values from `.env`.
+
+5. Stop the stack without deleting database data:
 
    ```powershell
-   .\mvnw.cmd spring-boot:run
+   docker compose down
    ```
 
-5. Authenticate API calls with the `APP_SECURITY_USERNAME` and `APP_SECURITY_PASSWORD` values
-   from `.env`.
+PostgreSQL data is stored in the named `postgres-data` volume. Run
+`docker compose down --volumes` only when you intentionally want to delete local database data.
+
+## Run for local development
+
+Install JDK 25, create `.env` as described above, then start only PostgreSQL and run Spring Boot
+on the host:
+
+```powershell
+docker compose up -d postgres
+.\mvnw.cmd spring-boot:run
+```
 
 ## Test
 
-Tests use an in-memory H2 database in PostgreSQL compatibility mode. A local database and `.env`
-file are not required.
+Service unit tests use JUnit and Mockito. Integration tests use an in-memory H2 database in
+PostgreSQL compatibility mode. A local database, Docker, and `.env` file are not required.
 
 ```powershell
 .\mvnw.cmd test
