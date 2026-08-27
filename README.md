@@ -92,6 +92,26 @@ Relationship requests use IDs. For example, assigning a round to a company uses:
 Schema changes belong in versioned scripts under `src/main/resources/db/migration`. Hibernate
 validates the mapped entities against that schema at startup; it does not modify production tables.
 
+## What to build next
+
+Work through these items in order:
+
+1. **Completed:** Add JUnit and Mockito tests for company, interview-round, application, company-round, and
+   round-selection services and controllers. Cover validation, missing records, duplicate data,
+   and relationship errors.
+2. **Completed:** Add Testcontainers integration tests against PostgreSQL so Flyway migrations, constraints, and
+   JPA mappings are verified on the same database engine used in production.
+3. Add OpenAPI documentation and Swagger UI, including request examples and authentication setup.
+4. Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
+   and token-based authentication.
+5. Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
+6. Add CI that runs `./mvnw test` and builds the Docker image for every pull request.
+7. Add observability and deployment safeguards: Actuator health checks, structured logs, metrics,
+   production profiles, HTTPS, backups, and secret-manager integration.
+
+The immediate next milestone is items 1 and 2: complete automated coverage and prove the schema
+against a real PostgreSQL container before adding more API features.
+
 ## Secret handling
 
 Never commit `.env` or real credentials. If a real credential is committed, rotate it immediately;
