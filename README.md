@@ -106,10 +106,15 @@ Content-Type: application/json
 | Rounds assigned to companies | `/api/company-rounds` |
 | Student applications | `/api/applications` |
 | Student round decisions | `/api/round-selections` |
+| Application users (admin only) | `/api/users` |
 
 Each resource supports `POST`, `GET` collection, `GET /{id}`, `PUT /{id}`, and `DELETE /{id}`.
 Student, company, and interview-round collections accept `page`, `size` (maximum 100), `sort`,
 `direction`, and `query` parameters. Collection responses include content and page metadata.
+
+Administrators can create users, list users, change roles or enabled status, and reset passwords
+through `/api/users`. Password hashes are never included in API responses, and the last enabled
+administrator cannot be disabled or demoted.
 Relationship requests use IDs. For example, assigning a round to a company uses:
 
 ```json

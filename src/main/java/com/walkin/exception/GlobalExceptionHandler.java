@@ -44,6 +44,11 @@ public class GlobalExceptionHandler {
                 "The request conflicts with existing or referenced data", Map.of());
     }
 
+    @ExceptionHandler(ResourceConflictException.class)
+    ResponseEntity<ApiError> handleConflict(ResourceConflictException exception) {
+        return response(HttpStatus.CONFLICT, exception.getMessage(), Map.of());
+    }
+
     private ResponseEntity<ApiError> response(
             HttpStatus status, String message, Map<String, String> fieldErrors) {
         return ResponseEntity.status(status).body(new ApiError(
