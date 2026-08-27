@@ -15,6 +15,7 @@ companies, interview rounds, applications, and round-by-round selection decision
 - JUnit and Mockito for automated tests
 - H2 for isolated integration tests
 - Docker and Docker Compose
+- OpenAPI 3 and Swagger UI
 
 ## Run with Docker
 
@@ -92,6 +93,12 @@ Relationship requests use IDs. For example, assigning a round to a company uses:
 Schema changes belong in versioned scripts under `src/main/resources/db/migration`. Hibernate
 validates the mapped entities against that schema at startup; it does not modify production tables.
 
+## API documentation
+
+With the application running, open `http://localhost:8080/swagger-ui.html` for interactive API
+documentation. Select **Authorize** and enter the credentials from `.env` before trying protected
+API operations. The generated OpenAPI JSON is available at `http://localhost:8080/v3/api-docs`.
+
 ## What to build next
 
 Work through these items in order:
@@ -101,7 +108,7 @@ Work through these items in order:
    and relationship errors.
 2. **Completed:** Add Testcontainers integration tests against PostgreSQL so Flyway migrations, constraints, and
    JPA mappings are verified on the same database engine used in production.
-3. Add OpenAPI documentation and Swagger UI, including request examples and authentication setup.
+3. **Completed:** Add OpenAPI documentation and Swagger UI, including authentication setup.
 4. Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
    and token-based authentication.
 5. Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
@@ -109,8 +116,7 @@ Work through these items in order:
 7. Add observability and deployment safeguards: Actuator health checks, structured logs, metrics,
    production profiles, HTTPS, backups, and secret-manager integration.
 
-The immediate next milestone is items 1 and 2: complete automated coverage and prove the schema
-against a real PostgreSQL container before adding more API features.
+The immediate next milestone is database-backed users, roles, and token authentication.
 
 ## Secret handling
 
