@@ -7,8 +7,10 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-walkin_db}
       DB_USERNAME: ${POSTGRES_USER:-walkin}
       DB_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
-      APP_SECURITY_USERNAME: ${APP_SECURITY_USERNAME:-walkin-api}
-      APP_SECURITY_PASSWORD: ${APP_SECURITY_PASSWORD:?Set APP_SECURITY_PASSWORD in .env}
+      APP_ADMIN_USERNAME: ${APP_ADMIN_USERNAME:-walkin-admin}
+      APP_ADMIN_PASSWORD: ${APP_ADMIN_PASSWORD:?Set APP_ADMIN_PASSWORD in .env}
+      APP_JWT_SECRET: ${APP_JWT_SECRET:?Set APP_JWT_SECRET in .env}
+      APP_JWT_TTL: ${APP_JWT_TTL:-PT15M}
     ports:
       - "${APP_PORT:-8080}:8080"
     depends_on:

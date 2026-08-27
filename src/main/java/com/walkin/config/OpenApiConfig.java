@@ -12,7 +12,7 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class OpenApiConfig {
 
-    static final String BASIC_AUTH = "basicAuth";
+    static final String BEARER_AUTH = "bearerAuth";
 
     @Bean
     OpenAPI walkInOpenApi() {
@@ -22,11 +22,11 @@ public class OpenApiConfig {
                         .version("1.0.0")
                         .description("REST API for recruitment walk-in drives")
                         .contact(new Contact().name("WalkIn API team")))
-                .addSecurityItem(new SecurityRequirement().addList(BASIC_AUTH))
-                .components(new Components().addSecuritySchemes(BASIC_AUTH,
+                .addSecurityItem(new SecurityRequirement().addList(BEARER_AUTH))
+                .components(new Components().addSecuritySchemes(BEARER_AUTH,
                         new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
-                                .scheme("basic")
-                                .description("Use the configured WalkIn API username and password")));
+                                .scheme("bearer").bearerFormat("JWT")
+                                .description("Use the access token returned by POST /api/auth/login")));
     }
 }

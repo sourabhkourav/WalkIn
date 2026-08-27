@@ -10,7 +10,7 @@ companies, interview rounds, applications, and round-by-round selection decision
 - PostgreSQL 18
 - Spring Data JPA and Hibernate
 - Flyway database migrations
-- Spring Security with stateless HTTP Basic authentication
+- Spring Security with stateless JWT authentication and BCrypt password hashing
 - Maven Wrapper
 - JUnit and Mockito for automated tests
 - H2 for isolated integration tests
@@ -36,8 +36,8 @@ Docker Desktop is the only requirement for running the complete stack.
    docker compose up --build
    ```
 
-4. The API is available at `http://localhost:8080`. Authenticate with the
-   `APP_SECURITY_USERNAME` and `APP_SECURITY_PASSWORD` values from `.env`.
+4. The API is available at `http://localhost:8080`. Obtain a token from `POST /api/auth/login`
+   using the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env`.
 
 5. Stop the stack without deleting database data:
 
@@ -69,7 +69,15 @@ PostgreSQL compatibility mode. A local database, Docker, and `.env` file are not
 
 ## REST endpoints
 
-All endpoints require HTTP Basic authentication.
+All resource endpoints require a JWT bearer token. `ADMIN` can read and modify resources;
+`RECRUITER` can read them. Obtain a short-lived access token with:
+
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{"username":"walkin-admin","password":"your-password"}
+```
 
 | Resource | Endpoint |
 | --- | --- |
@@ -96,8 +104,8 @@ validates the mapped entities against that schema at startup; it does not modify
 ## API documentation
 
 With the application running, open `http://localhost:8080/swagger-ui.html` for interactive API
-documentation. Select **Authorize** and enter the credentials from `.env` before trying protected
-API operations. The generated OpenAPI JSON is available at `http://localhost:8080/v3/api-docs`.
+documentation. Log in through `/api/auth/login`, select **Authorize**, and paste the returned JWT
+before trying protected operations. The OpenAPI JSON is at `http://localhost:8080/v3/api-docs`.
 
 ## What to build next
 
@@ -109,7 +117,7 @@ Work through these items in order:
 2. **Completed:** Add Testcontainers integration tests against PostgreSQL so Flyway migrations, constraints, and
    JPA mappings are verified on the same database engine used in production.
 3. **Completed:** Add OpenAPI documentation and Swagger UI, including authentication setup.
-4. Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
+4. **Completed:** Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
    and token-based authentication.
 5. Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
 6. Add CI that runs `./mvnw test` and builds the Docker image for every pull request.

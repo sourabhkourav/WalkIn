@@ -28,7 +28,7 @@ class OpenApiTests {
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("application/json"))
                 .andExpect(jsonPath("$.info.title").value("WalkIn API"))
-                .andExpect(jsonPath("$.components.securitySchemes.basicAuth.scheme").value("basic"))
+                .andExpect(jsonPath("$.components.securitySchemes.bearerAuth.scheme").value("bearer"))
                 .andExpect(jsonPath("$.paths['/api/students']").exists())
                 .andExpect(jsonPath("$.paths['/api/companies']").exists())
                 .andExpect(jsonPath("$.paths['/api/applications']").exists());

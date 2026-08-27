@@ -28,8 +28,9 @@ class PostgreSqlIntegrationTests {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
-        registry.add("spring.security.user.name", () -> "integration-user");
-        registry.add("spring.security.user.password", () -> "integration-password");
+        registry.add("app.bootstrap-admin.username", () -> "integration-admin");
+        registry.add("app.bootstrap-admin.password", () -> "integration-password");
+        registry.add("app.jwt.secret", () -> "integration-jwt-secret-that-is-over-32-bytes");
     }
 
     @Autowired StudentRepository students;
