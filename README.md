@@ -16,6 +16,7 @@ companies, interview rounds, applications, and round-by-round selection decision
 - H2 for isolated integration tests
 - Docker and Docker Compose
 - OpenAPI 3 and Swagger UI
+- Actuator health probes, Prometheus metrics, and structured production logs
 
 ## Run with Docker
 
@@ -75,6 +76,16 @@ skipped. CI also validates `compose.yaml` and builds the production image withou
 Failed test reports are retained as workflow artifacts for seven days. Dependabot checks Maven,
 GitHub Actions, and Docker dependencies weekly.
 
+## Operations
+
+The public health endpoints are `/actuator/health`, `/actuator/health/liveness`, and
+`/actuator/health/readiness`; component details are not exposed. `/actuator/prometheus` requires an
+`ADMIN` bearer token. Docker Compose enables the `prod` profile, uses the readiness endpoint for
+its application health check, emits ECS-formatted JSON logs, and enables graceful shutdown.
+Production deployments should terminate HTTPS at the ingress or load balancer, inject credentials
+from the platform's secret manager, and configure automated PostgreSQL backups with restore tests;
+these infrastructure responsibilities are intentionally not embedded in the application image.
+
 ## REST endpoints
 
 All resource endpoints require a JWT bearer token. `ADMIN` can read and modify resources;
@@ -95,10 +106,15 @@ Content-Type: application/json
 | Rounds assigned to companies | `/api/company-rounds` |
 | Student applications | `/api/applications` |
 | Student round decisions | `/api/round-selections` |
+| Application users (admin only) | `/api/users` |
 
 Each resource supports `POST`, `GET` collection, `GET /{id}`, `PUT /{id}`, and `DELETE /{id}`.
 Student, company, and interview-round collections accept `page`, `size` (maximum 100), `sort`,
 `direction`, and `query` parameters. Collection responses include content and page metadata.
+
+Administrators can create users, list users, change roles or enabled status, and reset passwords
+through `/api/users`. Password hashes are never included in API responses, and the last enabled
+administrator cannot be disabled or demoted.
 Relationship requests use IDs. For example, assigning a round to a company uses:
 
 ```json
@@ -131,8 +147,9 @@ Work through these items in order:
    and token-based authentication.
 5. **Completed:** Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
 6. **Completed:** Add CI that runs the Maven verification suite and builds the Docker image for every pull request.
-7. Add observability and deployment safeguards: Actuator health checks, structured logs, metrics,
-   production profiles, HTTPS, backups, and secret-manager integration.
+7. **Completed (application):** Add Actuator health checks, structured logs, metrics, production
+   defaults, and proxy-aware HTTPS handling. HTTPS termination, backups, and secret-manager wiring
+   belong to the target deployment platform.
 
 The immediate next milestone is database-backed users, roles, and token authentication.
 
