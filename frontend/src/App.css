@@ -52,3 +52,18 @@ button:disabled { cursor: wait; opacity: .65; }
   overflow-wrap: anywhere;
   font-size: 0.9rem;
 }
+
+.candidate-form-section {
+  margin-top: 32px;
+  text-align: left;
+}
+
+.candidate-form-section h2 {
+  margin: 0 0 14px;
+  color: var(--heading);
+}
+
+.candidate-form {
+  display: grid;
+  gap: 14px;
+}
