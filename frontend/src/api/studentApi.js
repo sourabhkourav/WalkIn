@@ -34,3 +34,17 @@ export async function createStudent(accessToken, candidate) {
 
   return response.json()
 }
+
+export async function deleteStudent(accessToken, studentId) {
+  const response = await fetch(`${API_BASE_URL}/api/students/${studentId}`, {
+    method: 'DELETE',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+    },
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message ?? 'Unable to delete candidate')
+  }
+}

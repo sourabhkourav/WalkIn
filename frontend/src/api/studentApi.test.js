@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createStudent } from './studentApi'
+import { createStudent, deleteStudent } from './studentApi'
 
 describe('studentApi', () => {
   afterEach(() => {
@@ -37,5 +37,26 @@ describe('studentApi', () => {
     }))
 
     await expect(createStudent('test-token', {})).rejects.toThrow('Email already exists')
+  })
+
+  it('deletes a candidate with bearer authentication', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({ ok: true }))
+
+    await expect(deleteStudent('test-token', 42)).resolves.toBeUndefined()
+    expect(fetch).toHaveBeenCalledWith('/api/students/42', {
+      method: 'DELETE',
+      headers: {
+        Authorization: 'Bearer test-token',
+      },
+    })
+  })
+
+  it('uses the backend error message when deletion fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      json: vi.fn().mockResolvedValue({ message: 'Candidate has related applications' }),
+    }))
+
+    await expect(deleteStudent('test-token', 42)).rejects.toThrow('Candidate has related applications')
   })
 })
