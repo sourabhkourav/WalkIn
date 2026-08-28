@@ -4,17 +4,22 @@ function CandidateList({ candidates }) {
   }
 
   return (
-    <ul>
-      {candidates.map((candidate) => (
-        <li key={candidate.studentId}>
-          <strong>
-            {candidate.firstName} {candidate.lastName}
-          </strong>
-          <span>{candidate.email}</span>
-        </li>
-      ))}
-    </ul>
-  )
+    <section className="candidate-section" aria-labelledby="candidate-heading">
+        <h2 id="candidate-heading">Candidates</h2>
+
+        <ul className="candidate-list">
+        {candidates.map((candidate) => (
+            <li className="candidate-card" key={candidate.studentId}>
+            <strong>
+                {candidate.firstName} {candidate.lastName}
+            </strong>
+            <span>{candidate.email}</span>
+            <span>{candidate.contactNumber}</span>
+            </li>
+        ))}
+        </ul>
+    </section>
+    )
 }
 
 export default CandidateList

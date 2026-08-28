@@ -43,10 +43,10 @@ function Application() {
             {loadError}
           </p>
         )}
-        <CandidateList candidates={candidates} />
         <p className="eyebrow">WalkIn administration</p>
         <h1>Welcome back</h1>
         <p>You are signed in and ready to manage walk-in drives.</p>
+        <CandidateList candidates={candidates} />
         <button type="button" className="secondary-button" onClick={logout}>Sign out</button>
       </section>
     </main>
