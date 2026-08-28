@@ -48,3 +48,21 @@ export async function deleteStudent(accessToken, studentId) {
     throw new Error(error?.message ?? 'Unable to delete candidate')
   }
 }
+
+export async function updateStudent(accessToken, studentId, candidate) {
+  const response = await fetch(`${API_BASE_URL}/api/students/${studentId}`, {
+    method: 'PUT',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(candidate),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message ?? 'Unable to update candidate')
+  }
+
+  return response.json()
+}

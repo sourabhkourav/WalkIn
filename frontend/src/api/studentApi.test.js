@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
-import { createStudent, deleteStudent } from './studentApi'
+import { createStudent, deleteStudent, updateStudent } from './studentApi'
 
 describe('studentApi', () => {
   afterEach(() => {
@@ -58,5 +58,38 @@ describe('studentApi', () => {
     }))
 
     await expect(deleteStudent('test-token', 42)).rejects.toThrow('Candidate has related applications')
+  })
+
+  it('updates a candidate with bearer authentication', async () => {
+    const candidate = {
+      firstName: 'Aarav',
+      lastName: 'Sharma',
+      email: 'aarav.updated@example.com',
+      contactNumber: '9876543210',
+    }
+    const updatedCandidate = { studentId: 42, ...candidate }
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: vi.fn().mockResolvedValue(updatedCandidate),
+    }))
+
+    await expect(updateStudent('test-token', 42, candidate)).resolves.toEqual(updatedCandidate)
+    expect(fetch).toHaveBeenCalledWith('/api/students/42', {
+      method: 'PUT',
+      headers: {
+        Authorization: 'Bearer test-token',
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(candidate),
+    })
+  })
+
+  it('uses the backend error message when an update fails', async () => {
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: false,
+      json: vi.fn().mockResolvedValue({ message: 'Email already exists' }),
+    }))
+
+    await expect(updateStudent('test-token', 42, {})).rejects.toThrow('Email already exists')
   })
 })
