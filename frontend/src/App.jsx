@@ -5,7 +5,7 @@ import CandidateForm from './components/CandidateForm'
 import './App.css'
 import CandidateList from './components/CandidateList'
 import { useEffect, useState } from 'react'
-import { createStudent, deleteStudent, getStudents } from './api/studentApi'
+import { createStudent, deleteStudent, getStudents, updateStudent } from './api/studentApi'
 
 function Application() {
   const { session, logout } = useAuth()
@@ -17,6 +17,8 @@ function Application() {
   const [registrationMessage, setRegistrationMessage] = useState('')
   const [deletingStudentId, setDeletingStudentId] = useState(null)
   const [deleteError, setDeleteError] = useState('')
+  const [editingCandidate, setEditingCandidate] = useState(null)
+  const [isUpdating, setIsUpdating] = useState(false)
 
   useEffect(() => {
     if (!session) return
@@ -91,6 +93,33 @@ function Application() {
     }
   }
 
+  async function handleCandidateUpdate(candidateDetails) {
+    setIsUpdating(true)
+    setRegistrationError('')
+    setRegistrationMessage('')
+
+    try {
+      const updatedCandidate = await updateStudent(
+        session.accessToken,
+        editingCandidate.studentId,
+        candidateDetails,
+      )
+      setCandidates((currentCandidates) =>
+        currentCandidates.map((candidate) =>
+          candidate.studentId === updatedCandidate.studentId ? updatedCandidate : candidate,
+        ),
+      )
+      setRegistrationMessage(`${updatedCandidate.firstName} ${updatedCandidate.lastName} updated successfully.`)
+      setEditingCandidate(null)
+      return true
+    } catch (error) {
+      setRegistrationError(error.message)
+      return false
+    } finally {
+      setIsUpdating(false)
+    }
+  }
+
   if (!session) return <LoginForm />
 
   return (
@@ -107,13 +136,24 @@ function Application() {
         <p>You are signed in and ready to manage walk-in drives.</p>
         {registrationError && <p className="error-message" role="alert">{registrationError}</p>}
         {registrationMessage && <p className="success-message" role="status">{registrationMessage}</p>}
-        <CandidateForm isSubmitting={isRegistering} onSubmit={handleCandidateRegistration} />
+        {editingCandidate ? (
+          <CandidateForm
+            key={editingCandidate.studentId}
+            candidate={editingCandidate}
+            isSubmitting={isUpdating}
+            onCancel={() => setEditingCandidate(null)}
+            onSubmit={handleCandidateUpdate}
+          />
+        ) : (
+          <CandidateForm isSubmitting={isRegistering} onSubmit={handleCandidateRegistration} />
+        )}
         {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
         {!isLoading && !loadError && (
           <CandidateList
             candidates={candidates}
             deletingStudentId={deletingStudentId}
             onDelete={handleCandidateDelete}
+            onEdit={setEditingCandidate}
           />
         )}
         <button type="button" className="secondary-button" onClick={handleLogout}>Sign out</button>

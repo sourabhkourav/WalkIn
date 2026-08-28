@@ -44,4 +44,21 @@ describe('CandidateList', () => {
 
     expect(onDelete).toHaveBeenCalledWith(candidate)
   })
+
+  it('requests editing for the selected candidate', async () => {
+    const user = userEvent.setup()
+    const onEdit = vi.fn()
+    const candidate = {
+      studentId: 1,
+      firstName: 'Aarav',
+      lastName: 'Sharma',
+      email: 'aarav@example.com',
+      contactNumber: '9876543210',
+    }
+    render(<CandidateList candidates={[candidate]} onEdit={onEdit} />)
+
+    await user.click(screen.getByRole('button', { name: 'Edit' }))
+
+    expect(onEdit).toHaveBeenCalledWith(candidate)
+  })
 })

@@ -1,6 +1,7 @@
 package com.walkin.service.impl;
 
 import com.walkin.entity.Student;
+import com.walkin.entity.NotificationChannel;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.StudentRepository;
 import org.junit.jupiter.api.Test;
@@ -67,6 +68,8 @@ class StudentServiceImplTests {
     void updateStudentCopiesEditableFieldsAndSavesExistingEntity() {
         Student existing = student("Old", "Name", "old@example.com", "9876543210");
         Student update = student("New", "Name", "new@example.com", "9876543211");
+        update.setNotificationChannel(NotificationChannel.WHATSAPP);
+        update.setAdvanceNoticeMinutes(45);
         update.setResume(new byte[]{1, 2, 3});
         when(studentRepository.findById(7)).thenReturn(Optional.of(existing));
         when(studentRepository.save(existing)).thenReturn(existing);
@@ -76,6 +79,8 @@ class StudentServiceImplTests {
         assertSame(existing, result);
         assertEquals("New", existing.getFirstName());
         assertEquals("new@example.com", existing.getEmail());
+        assertEquals(NotificationChannel.WHATSAPP, existing.getNotificationChannel());
+        assertEquals(45, existing.getAdvanceNoticeMinutes());
         assertEquals(3, existing.getResume().length);
         verify(studentRepository).save(existing);
     }

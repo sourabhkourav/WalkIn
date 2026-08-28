@@ -1,4 +1,4 @@
-function CandidateList({ candidates, deletingStudentId, onDelete }) {
+function CandidateList({ candidates, deletingStudentId, onDelete, onEdit }) {
   if (candidates.length === 0) {
     return <p>No candidates found.</p>
   }
@@ -15,6 +15,11 @@ function CandidateList({ candidates, deletingStudentId, onDelete }) {
             </strong>
             <span>{candidate.email}</span>
             <span>{candidate.contactNumber}</span>
+            {onEdit && (
+              <button type="button" className="edit-button" onClick={() => onEdit(candidate)}>
+                Edit
+              </button>
+            )}
             {onDelete && (
               <button
                 type="button"

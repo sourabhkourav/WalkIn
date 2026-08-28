@@ -26,6 +26,21 @@ describe('CandidateForm', () => {
   it('disables submission while registration is in progress', () => {
     render(<CandidateForm isSubmitting onSubmit={vi.fn()} />)
 
-    expect(screen.getByRole('button', { name: 'Registering…' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Saving…' })).toBeDisabled()
+  })
+
+  it('prefills candidate details for editing', () => {
+    const candidate = {
+      firstName: 'Aarav',
+      lastName: 'Sharma',
+      email: 'aarav@example.com',
+      contactNumber: '9876543210',
+    }
+    render(<CandidateForm candidate={candidate} onCancel={vi.fn()} onSubmit={vi.fn()} />)
+
+    expect(screen.getByRole('heading', { name: 'Edit candidate' })).toBeInTheDocument()
+    expect(screen.getByLabelText('First name')).toHaveValue('Aarav')
+    expect(screen.getByLabelText('Email')).toHaveValue('aarav@example.com')
+    expect(screen.getByRole('button', { name: 'Cancel' })).toBeInTheDocument()
   })
 })
