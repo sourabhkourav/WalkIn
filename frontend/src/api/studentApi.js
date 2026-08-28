@@ -16,3 +16,21 @@ export async function getStudents(accessToken) {
 
   return response.json()
 }
+
+export async function createStudent(accessToken, candidate) {
+  const response = await fetch(`${API_BASE_URL}/api/students`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(candidate),
+  })
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => null)
+    throw new Error(error?.message ?? 'Unable to register candidate')
+  }
+
+  return response.json()
+}
