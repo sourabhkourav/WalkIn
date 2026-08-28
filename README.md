@@ -151,7 +151,7 @@ Work through these items in order:
    defaults, and proxy-aware HTTPS handling. HTTPS termination, backups, and secret-manager wiring
    belong to the target deployment platform.
 
-The immediate next milestone is database-backed users, roles, and token authentication.
+The immediate next milestone is a frontend client for the WalkIn APIs.
 
 ## Secret handling
 
