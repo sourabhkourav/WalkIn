@@ -10,6 +10,7 @@ function Application() {
   const { session, logout } = useAuth()
   const [candidates, setCandidates] = useState([])
   const [loadError, setLoadError] = useState('')
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     if (!session) return
@@ -27,18 +28,31 @@ function Application() {
           setLoadError(error.message)
         }
       })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+        }
+      })
 
     return () => {
       cancelled = true
     }
   }, [session])
 
+  function handleLogout() {
+    setCandidates([])
+    setLoadError('')
+    setIsLoading(true)
+    logout()
+  }
+
   if (!session) return <LoginForm />
 
   return (
     <main className="app-shell">
       <section className="panel dashboard">
-        {loadError && (
+        {isLoading && <p role="status">Loading candidates…</p>}
+        {!isLoading && loadError && (
           <p className="error-message" role="alert">
             {loadError}
           </p>
@@ -46,8 +60,8 @@ function Application() {
         <p className="eyebrow">WalkIn administration</p>
         <h1>Welcome back</h1>
         <p>You are signed in and ready to manage walk-in drives.</p>
-        <CandidateList candidates={candidates} />
-        <button type="button" className="secondary-button" onClick={logout}>Sign out</button>
+        {!isLoading && !loadError && <CandidateList candidates={candidates} />}
+        <button type="button" className="secondary-button" onClick={handleLogout}>Sign out</button>
       </section>
     </main>
   )
