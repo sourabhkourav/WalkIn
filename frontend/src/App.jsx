@@ -5,7 +5,7 @@ import CandidateForm from './components/CandidateForm'
 import './App.css'
 import CandidateList from './components/CandidateList'
 import { useEffect, useState } from 'react'
-import { createStudent, getStudents } from './api/studentApi'
+import { createStudent, deleteStudent, getStudents } from './api/studentApi'
 
 function Application() {
   const { session, logout } = useAuth()
@@ -15,6 +15,8 @@ function Application() {
   const [isRegistering, setIsRegistering] = useState(false)
   const [registrationError, setRegistrationError] = useState('')
   const [registrationMessage, setRegistrationMessage] = useState('')
+  const [deletingStudentId, setDeletingStudentId] = useState(null)
+  const [deleteError, setDeleteError] = useState('')
 
   useEffect(() => {
     if (!session) return
@@ -68,6 +70,27 @@ function Application() {
     }
   }
 
+  async function handleCandidateDelete(candidate) {
+    const confirmed = window.confirm(
+      `Delete ${candidate.firstName} ${candidate.lastName}? This action cannot be undone.`,
+    )
+    if (!confirmed) return
+
+    setDeletingStudentId(candidate.studentId)
+    setDeleteError('')
+
+    try {
+      await deleteStudent(session.accessToken, candidate.studentId)
+      setCandidates((currentCandidates) =>
+        currentCandidates.filter((currentCandidate) => currentCandidate.studentId !== candidate.studentId),
+      )
+    } catch (error) {
+      setDeleteError(error.message)
+    } finally {
+      setDeletingStudentId(null)
+    }
+  }
+
   if (!session) return <LoginForm />
 
   return (
@@ -85,7 +108,14 @@ function Application() {
         {registrationError && <p className="error-message" role="alert">{registrationError}</p>}
         {registrationMessage && <p className="success-message" role="status">{registrationMessage}</p>}
         <CandidateForm isSubmitting={isRegistering} onSubmit={handleCandidateRegistration} />
-        {!isLoading && !loadError && <CandidateList candidates={candidates} />}
+        {deleteError && <p className="error-message" role="alert">{deleteError}</p>}
+        {!isLoading && !loadError && (
+          <CandidateList
+            candidates={candidates}
+            deletingStudentId={deletingStudentId}
+            onDelete={handleCandidateDelete}
+          />
+        )}
         <button type="button" className="secondary-button" onClick={handleLogout}>Sign out</button>
       </section>
     </main>

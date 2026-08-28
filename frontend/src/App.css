@@ -54,6 +54,14 @@ button:disabled { cursor: wait; opacity: .65; }
   font-size: 0.9rem;
 }
 
+.danger-button {
+  justify-self: start;
+  min-height: 36px;
+  margin-top: 8px;
+  padding: 7px 12px;
+  background: #b91c1c;
+}
+
 .candidate-form-section {
   margin-top: 32px;
   text-align: left;

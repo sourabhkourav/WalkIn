@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { render, screen } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import CandidateList from './CandidateList'
 
 describe('CandidateList', () => {
@@ -25,5 +26,22 @@ describe('CandidateList', () => {
     expect(screen.getByText('Aarav Sharma')).toBeInTheDocument()
     expect(screen.getByText('aarav@example.com')).toBeInTheDocument()
     expect(screen.getByText('9876543210')).toBeInTheDocument()
+  })
+
+  it('requests deletion for the selected candidate', async () => {
+    const user = userEvent.setup()
+    const onDelete = vi.fn()
+    const candidate = {
+      studentId: 1,
+      firstName: 'Aarav',
+      lastName: 'Sharma',
+      email: 'aarav@example.com',
+      contactNumber: '9876543210',
+    }
+    render(<CandidateList candidates={[candidate]} onDelete={onDelete} />)
+
+    await user.click(screen.getByRole('button', { name: 'Delete' }))
+
+    expect(onDelete).toHaveBeenCalledWith(candidate)
   })
 })

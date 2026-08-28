@@ -1,4 +1,4 @@
-function CandidateList({ candidates }) {
+function CandidateList({ candidates, deletingStudentId, onDelete }) {
   if (candidates.length === 0) {
     return <p>No candidates found.</p>
   }
@@ -15,6 +15,16 @@ function CandidateList({ candidates }) {
             </strong>
             <span>{candidate.email}</span>
             <span>{candidate.contactNumber}</span>
+            {onDelete && (
+              <button
+                type="button"
+                className="danger-button"
+                disabled={deletingStudentId === candidate.studentId}
+                onClick={() => onDelete(candidate)}
+              >
+                {deletingStudentId === candidate.studentId ? 'Deleting…' : 'Delete'}
+              </button>
+            )}
             </li>
         ))}
         </ul>
