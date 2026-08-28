@@ -15,10 +15,26 @@ describe('LoginForm', () => {
       tokenType: 'Bearer',
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     }
-    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
-      ok: true,
-      json: vi.fn().mockResolvedValue(session),
-    }))
+    vi.stubGlobal(
+      'fetch',
+      vi.fn()
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue(session),
+        })
+        .mockResolvedValueOnce({
+          ok: true,
+          json: vi.fn().mockResolvedValue({
+            content: [],
+            page: 0,
+            size: 20,
+            totalElements: 0,
+            totalPages: 0,
+            first: true,
+            last: true,
+          }),
+        }),
+    )
 
     render(<App />)
     await user.type(screen.getByLabelText('Username'), 'walkin-admin')

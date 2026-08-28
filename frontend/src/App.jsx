@@ -3,25 +3,47 @@ import { useAuth } from './auth/authContext'
 import LoginForm from './components/LoginForm'
 import './App.css'
 import CandidateList from './components/CandidateList'
+import { useEffect, useState } from 'react'
+import { getStudents } from './api/studentApi'
 
 function Application() {
   const { session, logout } = useAuth()
+  const [candidates, setCandidates] = useState([])
+  const [loadError, setLoadError] = useState('')
+
+  useEffect(() => {
+    if (!session) return
+
+    let cancelled = false
+
+    getStudents(session.accessToken)
+      .then((page) => {
+        if (!cancelled) {
+          setCandidates(page.content)
+        }
+      })
+      .catch((error) => {
+        if (!cancelled) {
+          setLoadError(error.message)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [session])
 
   if (!session) return <LoginForm />
-
-  const exampleCandidates = [
-    {
-      studentId: 1,
-      firstName: 'Aarav',
-      lastName: 'Sharma',
-      email: 'aarav@example.com',
-    },
-  ]
 
   return (
     <main className="app-shell">
       <section className="panel dashboard">
-        <CandidateList candidates={exampleCandidates} />
+        {loadError && (
+          <p className="error-message" role="alert">
+            {loadError}
+          </p>
+        )}
+        <CandidateList candidates={candidates} />
         <p className="eyebrow">WalkIn administration</p>
         <h1>Welcome back</h1>
         <p>You are signed in and ready to manage walk-in drives.</p>
