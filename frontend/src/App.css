@@ -11,6 +11,7 @@ button { min-height: 46px; padding: 10px 16px; border: 0; border-radius: 9px; ba
 button:disabled { cursor: wait; opacity: .65; }
 .secondary-button { margin-top: 28px; background: var(--heading); }
 .error-message { margin: 0; padding: 12px; border-radius: 8px; color: var(--error); background: var(--error-background); font-size: .9rem; }
+.success-message { margin: 20px 0 0; padding: 12px; border-radius: 8px; color: #166534; background: #dcfce7; font-size: .9rem; }
 
 @media (max-width: 520px) {
   .app-shell { padding: 12px; }

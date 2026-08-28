@@ -1,15 +1,16 @@
 function CandidateForm({ isSubmitting = false, onSubmit }) {
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
     const form = event.currentTarget
     const formData = new FormData(form)
 
-    onSubmit({
+    const wasSuccessful = await onSubmit({
       firstName: formData.get('firstName').trim(),
       lastName: formData.get('lastName').trim(),
       email: formData.get('email').trim(),
       contactNumber: formData.get('contactNumber').trim(),
     })
+    if (wasSuccessful !== false) form.reset()
   }
 
   return (

@@ -1,16 +1,20 @@
 import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
 import LoginForm from './components/LoginForm'
+import CandidateForm from './components/CandidateForm'
 import './App.css'
 import CandidateList from './components/CandidateList'
 import { useEffect, useState } from 'react'
-import { getStudents } from './api/studentApi'
+import { createStudent, getStudents } from './api/studentApi'
 
 function Application() {
   const { session, logout } = useAuth()
   const [candidates, setCandidates] = useState([])
   const [loadError, setLoadError] = useState('')
   const [isLoading, setIsLoading] = useState(true)
+  const [isRegistering, setIsRegistering] = useState(false)
+  const [registrationError, setRegistrationError] = useState('')
+  const [registrationMessage, setRegistrationMessage] = useState('')
 
   useEffect(() => {
     if (!session) return
@@ -46,6 +50,24 @@ function Application() {
     logout()
   }
 
+  async function handleCandidateRegistration(candidate) {
+    setIsRegistering(true)
+    setRegistrationError('')
+    setRegistrationMessage('')
+
+    try {
+      const savedCandidate = await createStudent(session.accessToken, candidate)
+      setCandidates((currentCandidates) => [savedCandidate, ...currentCandidates])
+      setRegistrationMessage(`${savedCandidate.firstName} ${savedCandidate.lastName} registered successfully.`)
+      return true
+    } catch (error) {
+      setRegistrationError(error.message)
+      return false
+    } finally {
+      setIsRegistering(false)
+    }
+  }
+
   if (!session) return <LoginForm />
 
   return (
@@ -60,6 +82,9 @@ function Application() {
         <p className="eyebrow">WalkIn administration</p>
         <h1>Welcome back</h1>
         <p>You are signed in and ready to manage walk-in drives.</p>
+        {registrationError && <p className="error-message" role="alert">{registrationError}</p>}
+        {registrationMessage && <p className="success-message" role="status">{registrationMessage}</p>}
+        <CandidateForm isSubmitting={isRegistering} onSubmit={handleCandidateRegistration} />
         {!isLoading && !loadError && <CandidateList candidates={candidates} />}
         <button type="button" className="secondary-button" onClick={handleLogout}>Sign out</button>
       </section>
