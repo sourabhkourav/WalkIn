@@ -42,6 +42,9 @@ class OpenApiTests {
                 .andExpect(jsonPath("$.paths['/api/hiring-drives/{driveId}/rounds']").exists())
                 .andExpect(jsonPath("$.paths['/api/public/hiring-drives/{registrationToken}']").exists())
                 .andExpect(jsonPath(
+                        "$.paths['/api/public/hiring-drives/{registrationToken}/registrations']")
+                        .exists())
+                .andExpect(jsonPath(
                         "$.paths['/api/public/hiring-drives/{registrationToken}'].get.security")
                         .isEmpty());
     }

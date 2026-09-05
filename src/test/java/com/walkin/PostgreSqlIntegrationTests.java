@@ -2,14 +2,18 @@ package com.walkin;
 
 import com.walkin.entity.Company;
 import com.walkin.entity.CompanyCustomRound;
+import com.walkin.entity.CandidateRegistration;
+import com.walkin.entity.CandidateRegistrationStatus;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.InterviewRound;
+import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.entity.Student;
 import com.walkin.entity.StudentApplication;
 import com.walkin.repository.CompanyCustomRoundRepository;
 import com.walkin.repository.CompanyRepository;
+import com.walkin.repository.CandidateRegistrationRepository;
 import com.walkin.repository.HiringDriveRepository;
 import com.walkin.repository.HiringDriveRoundRepository;
 import com.walkin.repository.InterviewRoundRepository;
@@ -25,6 +29,7 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.OffsetDateTime;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -51,6 +56,7 @@ class PostgreSqlIntegrationTests {
     @Autowired CompanyCustomRoundRepository companyRounds;
     @Autowired HiringDriveRepository hiringDrives;
     @Autowired HiringDriveRoundRepository hiringDriveRounds;
+    @Autowired CandidateRegistrationRepository candidateRegistrations;
 
     @Test
     void flywaySchemaPersistsRelationshipsAndEnforcesUniqueApplication() {
@@ -111,5 +117,25 @@ class PostgreSqlIntegrationTests {
                         .getFirst()
                         .getCompanyRound()
                         .getCompanyRoundId());
+
+        CandidateRegistration registration = new CandidateRegistration();
+        registration.setRegistrationReference(
+                UUID.fromString("6593f459-76b0-44b6-bc37-4147b87c8970"));
+        registration.setHiringDrive(drive);
+        registration.setFirstName("Asha");
+        registration.setEmail("candidate.drive.integration@example.com");
+        registration.setNotificationChannel(NotificationChannel.EMAIL);
+        registration.setNotificationDestination("alerts.drive.integration@example.com");
+        registration.setAdvanceNoticeMinutes(30);
+        registration.setStatus(CandidateRegistrationStatus.WAITING);
+        registration.setRegisteredAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
+        candidateRegistrations.saveAndFlush(registration);
+
+        assertNotNull(registration.getRegistrationId());
+        assertEquals(
+                CandidateRegistrationStatus.WAITING,
+                candidateRegistrations.findById(registration.getRegistrationId())
+                        .orElseThrow()
+                        .getStatus());
     }
 }

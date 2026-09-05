@@ -43,3 +43,9 @@ Registration-field requirements are stored on `hiring_drive` because every drive
 standard form configuration. Database checks restrict each value to `HIDDEN`, `OPTIONAL`, or
 `REQUIRED`. Existing and new drives default to required identity/contact fields and a hidden resume,
 so applying the migration does not introduce null configuration values.
+
+The `candidate_registration` table stores one venue registration independently of the legacy
+student table. A random UUID is the external reference; the sequential primary key remains internal.
+Unique constraints prevent duplicate non-null email addresses or contact numbers within the same
+drive. Check constraints protect notification channels, advance-notice limits, and registration
+statuses even when records are written outside the API.

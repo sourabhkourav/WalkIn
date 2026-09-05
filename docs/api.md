@@ -118,5 +118,27 @@ or contact number must be visible. Recruiters can read the configuration but can
 The public hiring-drive response includes the same configuration under `registrationForm`, allowing
 the candidate UI to render the appropriate fields after a QR link is opened. Notification channel
 and advance-notice choices remain a separate candidate-controlled step and are not part of the
-company's field configuration. Arbitrary custom questions and public submission are not supported
-yet.
+company's field configuration. Arbitrary custom questions are not supported yet.
+
+## Public candidate registration
+
+A candidate submits the form without authentication using multipart form data:
+
+```http
+POST /api/public/hiring-drives/{registrationToken}/registrations
+Content-Type: multipart/form-data
+```
+
+The standard parts are `firstName`, `lastName`, `email`, `contactNumber`, `resume`,
+`notificationChannel`, `notificationDestination`, and `advanceNoticeMinutes`. The API enforces the
+drive's `HIDDEN`, `OPTIONAL`, and `REQUIRED` policies. Data sent for a hidden company field is
+rejected rather than retained.
+
+`notificationChannel` accepts `EMAIL`, `SMS`, or `WHATSAPP`. Its destination is validated as an
+email address or phone number as appropriate. This destination is candidate-controlled and may be
+different from contact information requested by the company.
+
+Resume upload is optional unless the drive requires it. Only PDF content up to 2 MB is accepted;
+both the declared media type and PDF file signature are checked. Successful registration returns
+only an opaque registration reference, `WAITING` status, and registration time. It does not echo
+personal information or resume content.

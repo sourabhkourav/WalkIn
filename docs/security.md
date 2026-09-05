@@ -15,6 +15,8 @@ and recruitment decisions.
 - Request validation and database constraints
 - One-time public registration tokens stored as SHA-256 hashes rather than reusable raw values
 - Minimal public drive responses that omit internal IDs, contact details, and token metadata
+- Public registration acknowledgements that never echo candidate details or resume content
+- PDF resume validation with 2 MB file and 3 MB request limits
 
 ## Secret management
 
@@ -33,6 +35,8 @@ GitHub push protection or an equivalent server-side control should also be enabl
 ## Candidate data
 
 - Collect only the personal data required to operate the hiring drive.
+- Reject values submitted for fields the hiring drive configured as hidden.
+- Keep candidate-controlled notification destinations separate from company-requested contact data.
 - Restrict access according to role and venue responsibility.
 - Do not log passwords, tokens, candidate contact details, or full request bodies.
 - Define retention and deletion rules before using real candidate data.

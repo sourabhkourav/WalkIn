@@ -9,6 +9,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -42,6 +43,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> handleConflict(DataIntegrityViolationException exception) {
         return response(HttpStatus.CONFLICT,
                 "The request conflicts with existing or referenced data", Map.of());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    ResponseEntity<ApiError> handleUploadTooLarge(MaxUploadSizeExceededException exception) {
+        return response(HttpStatus.CONTENT_TOO_LARGE,
+                "Uploaded file exceeds the allowed size", Map.of());
     }
 
     @ExceptionHandler(ResourceConflictException.class)

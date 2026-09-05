@@ -70,3 +70,15 @@ are registering.
 Company-requested fields and candidate notification preferences are separate concepts. The company
 controls the registration fields; the candidate later chooses the notification channel and advance
 notice used to return to the venue on time.
+
+## Candidate registration
+
+`CandidateRegistration` is drive-specific and deliberately separate from the older global student
+record. It stores the fields accepted by that drive, the candidate's notification preference, an
+opaque public reference, and a queue-oriented status beginning at `WAITING`. This permits the same
+person to attend multiple hiring drives without treating one global candidate record as the event
+registration.
+
+The public multipart endpoint first resolves the hashed, open-drive token, then enforces the form
+configuration. Resume bytes are accepted only for a configured resume field after size, media-type,
+and PDF-signature checks. The acknowledgement DTO excludes all submitted personal data.
