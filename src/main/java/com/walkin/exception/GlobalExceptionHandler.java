@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -54,6 +55,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(ResourceConflictException.class)
     ResponseEntity<ApiError> handleConflict(ResourceConflictException exception) {
         return response(HttpStatus.CONFLICT, exception.getMessage(), Map.of());
+    }
+
+    @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+    ResponseEntity<ApiError> handleConcurrentUpdate(
+            ObjectOptimisticLockingFailureException exception) {
+        return response(HttpStatus.CONFLICT,
+                "The candidate was updated by another operator; reload and try again", Map.of());
     }
 
     private ResponseEntity<ApiError> response(

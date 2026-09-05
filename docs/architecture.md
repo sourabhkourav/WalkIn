@@ -82,3 +82,13 @@ registration.
 The public multipart endpoint first resolves the hashed, open-drive token, then enforces the form
 configuration. Resume bytes are accepted only for a configured resume field after size, media-type,
 and PDF-signature checks. The acknowledgement DTO excludes all submitted personal data.
+
+## Venue candidate queue
+
+Authenticated venue operators manage drive registrations through a separate controller and DTO.
+Queue responses contain the fields requested by the company and only indicate whether a resume is
+available. They deliberately exclude the candidate-controlled notification destination.
+
+The queue lifecycle uses allowlisted transitions rather than accepting arbitrary state changes.
+Every real transition records its time and authenticated operator. A JPA version column protects
+against lost updates when multiple operators act on the same candidate at once.

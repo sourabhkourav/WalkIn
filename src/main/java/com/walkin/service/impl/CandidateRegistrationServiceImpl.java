@@ -7,23 +7,46 @@ import com.walkin.entity.HiringDrive;
 import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.exception.ResourceConflictException;
+import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CandidateRegistrationRepository;
 import com.walkin.service.CandidateRegistrationService;
 import com.walkin.service.HiringDriveService;
 import com.walkin.service.ResumeUploadValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
+
+import jakarta.persistence.criteria.Predicate;
 
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Locale;
+import java.util.EnumMap;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
 @Service
 @Transactional(readOnly = true)
 public class CandidateRegistrationServiceImpl implements CandidateRegistrationService {
+
+    private static final int MAX_SEARCH_LENGTH = 100;
+    private static final Map<CandidateRegistrationStatus, Set<CandidateRegistrationStatus>>
+            ALLOWED_TRANSITIONS = Map.of(
+                    CandidateRegistrationStatus.WAITING,
+                    Set.of(CandidateRegistrationStatus.CALLED,
+                            CandidateRegistrationStatus.WITHDRAWN),
+                    CandidateRegistrationStatus.CALLED,
+                    Set.of(CandidateRegistrationStatus.WAITING,
+                            CandidateRegistrationStatus.COMPLETED,
+                            CandidateRegistrationStatus.WITHDRAWN),
+                    CandidateRegistrationStatus.COMPLETED, Set.of(),
+                    CandidateRegistrationStatus.WITHDRAWN, Set.of());
 
     private static final Pattern EMAIL_PATTERN = Pattern.compile(
             "^[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}$",
@@ -83,7 +106,91 @@ public class CandidateRegistrationServiceImpl implements CandidateRegistrationSe
         registration.setNotificationDestination(notificationDestination);
         registration.setAdvanceNoticeMinutes(request.getAdvanceNoticeMinutes());
         registration.setStatus(CandidateRegistrationStatus.WAITING);
-        registration.setRegisteredAt(OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC));
+        OffsetDateTime registeredAt = now();
+        registration.setRegisteredAt(registeredAt);
+        registration.setStatusChangedAt(registeredAt);
+        return registrationRepository.save(registration);
+    }
+
+    @Override
+    public Page<CandidateRegistration> getRegistrations(
+            Integer driveId,
+            CandidateRegistrationStatus status,
+            String query,
+            Pageable pageable) {
+        requireDrive(driveId);
+        String searchTerm = normalizeSearch(query);
+        Specification<CandidateRegistration> specification = (root, criteriaQuery, builder) -> {
+            ArrayList<Predicate> predicates = new ArrayList<>();
+            predicates.add(builder.equal(root.get("hiringDrive").get("driveId"), driveId));
+            if (status != null) {
+                predicates.add(builder.equal(root.get("status"), status));
+            }
+            if (searchTerm != null) {
+                String pattern = "%" + searchTerm.toLowerCase(Locale.ROOT) + "%";
+                predicates.add(builder.or(
+                        builder.like(builder.lower(root.get("firstName")), pattern),
+                        builder.like(builder.lower(root.get("lastName")), pattern),
+                        builder.like(builder.lower(root.get("email")), pattern),
+                        builder.like(root.get("contactNumber"), pattern)));
+            }
+            return builder.and(predicates.toArray(Predicate[]::new));
+        };
+        return registrationRepository.findAll(specification, pageable);
+    }
+
+    @Override
+    public CandidateRegistration getRegistration(
+            Integer driveId,
+            UUID registrationReference) {
+        requireDrive(driveId);
+        return registrationRepository
+                .findByHiringDrive_DriveIdAndRegistrationReference(
+                        driveId, registrationReference)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Candidate registration not found"));
+    }
+
+    @Override
+    public Map<CandidateRegistrationStatus, Long> getStatusCounts(Integer driveId) {
+        requireDrive(driveId);
+        EnumMap<CandidateRegistrationStatus, Long> counts =
+                new EnumMap<>(CandidateRegistrationStatus.class);
+        for (CandidateRegistrationStatus status : CandidateRegistrationStatus.values()) {
+            counts.put(status,
+                    registrationRepository.countByHiringDrive_DriveIdAndStatus(driveId, status));
+        }
+        return counts;
+    }
+
+    @Override
+    @Transactional
+    public CandidateRegistration updateStatus(
+            Integer driveId,
+            UUID registrationReference,
+            CandidateRegistrationStatus targetStatus,
+            String changedBy) {
+        if (targetStatus == null) {
+            throw new IllegalArgumentException("status is required");
+        }
+        String actor = normalizeBlank(changedBy);
+        if (actor == null || actor.length() > 100) {
+            throw new IllegalArgumentException("status change requires a valid authenticated user");
+        }
+
+        CandidateRegistration registration = getRegistration(driveId, registrationReference);
+        CandidateRegistrationStatus currentStatus = registration.getStatus();
+        if (currentStatus == targetStatus) {
+            return registration;
+        }
+        if (!ALLOWED_TRANSITIONS.getOrDefault(currentStatus, Set.of()).contains(targetStatus)) {
+            throw new ResourceConflictException(
+                    "Candidate status cannot change from " + currentStatus + " to " + targetStatus);
+        }
+
+        registration.setStatus(targetStatus);
+        registration.setStatusChangedAt(now());
+        registration.setStatusChangedBy(actor);
         return registrationRepository.save(registration);
     }
 
@@ -153,5 +260,24 @@ public class CandidateRegistrationServiceImpl implements CandidateRegistrationSe
             return null;
         }
         return value.trim();
+    }
+
+    private HiringDrive requireDrive(Integer driveId) {
+        if (driveId == null || driveId < 1) {
+            throw new IllegalArgumentException("driveId must be positive");
+        }
+        return driveService.getDriveById(driveId);
+    }
+
+    private String normalizeSearch(String query) {
+        String normalized = normalizeBlank(query);
+        if (normalized != null && normalized.length() > MAX_SEARCH_LENGTH) {
+            throw new IllegalArgumentException("query must be 100 characters or fewer");
+        }
+        return normalized;
+    }
+
+    private OffsetDateTime now() {
+        return OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
     }
 }

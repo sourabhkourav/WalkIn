@@ -34,6 +34,10 @@ public class SecurityConfig {
                         .requestMatchers(
                                 HttpMethod.POST,
                                 "/api/public/hiring-drives/*/registrations").permitAll()
+                        .requestMatchers(
+                                HttpMethod.PATCH,
+                                "/api/hiring-drives/*/registrations/*/status")
+                        .hasAnyRole("ADMIN", "RECRUITER")
                         .requestMatchers("/actuator/prometheus").hasRole("ADMIN")
                         .requestMatchers("/api/users/**").hasRole("ADMIN")
                         .requestMatchers(HttpMethod.GET, "/api/**").hasAnyRole("ADMIN", "RECRUITER")

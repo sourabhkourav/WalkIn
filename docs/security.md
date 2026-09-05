@@ -37,6 +37,9 @@ GitHub push protection or an equivalent server-side control should also be enabl
 - Collect only the personal data required to operate the hiring drive.
 - Reject values submitted for fields the hiring drive configured as hidden.
 - Keep candidate-controlled notification destinations separate from company-requested contact data.
+- Omit notification destinations and resume bytes from candidate queue responses.
+- Expose resume content only through the authenticated PDF download endpoint.
+- Record the authenticated operator for every real queue-status change.
 - Restrict access according to role and venue responsibility.
 - Do not log passwords, tokens, candidate contact details, or full request bodies.
 - Define retention and deletion rules before using real candidate data.

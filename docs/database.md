@@ -49,3 +49,7 @@ student table. A random UUID is the external reference; the sequential primary k
 Unique constraints prevent duplicate non-null email addresses or contact numbers within the same
 drive. Check constraints protect notification channels, advance-notice limits, and registration
 statuses even when records are written outside the API.
+
+V10 adds queue audit fields (`status_changed_at`, `status_changed_by`) and an optimistic-lock
+`version`. Existing rows use their registration time as the initial status-change time. JPA manages
+the version so concurrent venue updates cannot silently overwrite one another.

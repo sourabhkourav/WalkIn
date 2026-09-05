@@ -35,6 +35,7 @@ Do not paste real tokens into documentation, issues, screenshots, or chat messag
 | Candidate reporting schedules | `/api/candidate-round-schedules` |
 | Hiring drives | `/api/hiring-drives` |
 | Ordered rounds in a hiring drive | `/api/hiring-drives/{driveId}/rounds` |
+| Hiring-drive candidate queue | `/api/hiring-drives/{driveId}/registrations` |
 | Application users | `/api/users` |
 
 General resources support create, get, list, update, and delete operations. Student, company, and
@@ -85,8 +86,7 @@ have read-only access.
 An unauthenticated candidate client can resolve an open, unexpired drive with
 `GET /api/public/hiring-drives/{registrationToken}`. The public response contains only the company
 name, drive name, venue, and operating times. It excludes internal IDs, company contact details,
-token metadata, and all candidate information. Candidate registration submission is not available
-yet.
+token metadata, and all candidate information.
 
 Administrators assign a reusable company round to a drive with
 `POST /api/hiring-drives/{driveId}/rounds`. Each assignment has a positive `roundOrder`, and the
@@ -142,3 +142,30 @@ Resume upload is optional unless the drive requires it. Only PDF content up to 2
 both the declared media type and PDF file signature are checked. Successful registration returns
 only an opaque registration reference, `WAITING` status, and registration time. It does not echo
 personal information or resume content.
+
+## Candidate queue
+
+Authenticated administrators and recruiters operate a drive's venue queue with
+`GET /api/hiring-drives/{driveId}/registrations`. The endpoint is paginated and accepts optional
+`status` and `query` filters. Search covers the company-requested name, email, and contact fields;
+the candidate-controlled notification destination is never returned.
+
+`GET /api/hiring-drives/{driveId}/registrations/summary` returns counts for each queue state and a
+total. A single registration can be retrieved by its opaque reference. When a resume is available,
+authorized operators can download it from
+`GET /api/hiring-drives/{driveId}/registrations/{registrationReference}/resume`.
+
+Administrators and recruiters update the queue using
+`PATCH /api/hiring-drives/{driveId}/registrations/{registrationReference}/status`:
+
+```text
+WAITING -> CALLED -> COMPLETED
+   |          |
+   |          +----> WAITING
+   +---------------> WITHDRAWN
+              +----> WITHDRAWN
+```
+
+`COMPLETED` and `WITHDRAWN` are terminal. Repeating the current status is idempotent. Each real
+change records its UTC time and authenticated operator. Optimistic locking converts concurrent
+operator conflicts into HTTP `409 Conflict` instead of silently losing an update.

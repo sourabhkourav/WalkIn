@@ -12,6 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
@@ -87,6 +88,17 @@ public class CandidateRegistration {
     @Column(name = "registered_at", nullable = false)
     @NotNull
     private OffsetDateTime registeredAt;
+
+    @Column(name = "status_changed_at", nullable = false)
+    @NotNull
+    private OffsetDateTime statusChangedAt;
+
+    @Column(name = "status_changed_by", length = 100)
+    private String statusChangedBy;
+
+    @Version
+    @Column(nullable = false)
+    private Long version;
 
     public Integer getRegistrationId() {
         return registrationId;
@@ -186,5 +198,25 @@ public class CandidateRegistration {
 
     public void setRegisteredAt(OffsetDateTime registeredAt) {
         this.registeredAt = registeredAt;
+    }
+
+    public OffsetDateTime getStatusChangedAt() {
+        return statusChangedAt;
+    }
+
+    public void setStatusChangedAt(OffsetDateTime statusChangedAt) {
+        this.statusChangedAt = statusChangedAt;
+    }
+
+    public String getStatusChangedBy() {
+        return statusChangedBy;
+    }
+
+    public void setStatusChangedBy(String statusChangedBy) {
+        this.statusChangedBy = statusChangedBy;
+    }
+
+    public Long getVersion() {
+        return version;
     }
 }

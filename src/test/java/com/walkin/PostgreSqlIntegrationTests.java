@@ -129,9 +129,11 @@ class PostgreSqlIntegrationTests {
         registration.setAdvanceNoticeMinutes(30);
         registration.setStatus(CandidateRegistrationStatus.WAITING);
         registration.setRegisteredAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
+        registration.setStatusChangedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
         candidateRegistrations.saveAndFlush(registration);
 
         assertNotNull(registration.getRegistrationId());
+        assertNotNull(registration.getVersion());
         assertEquals(
                 CandidateRegistrationStatus.WAITING,
                 candidateRegistrations.findById(registration.getRegistrationId())
