@@ -2,6 +2,7 @@ package com.walkin.controller;
 
 import com.walkin.entity.CandidateRoundSchedule;
 import com.walkin.entity.CompanyCustomRound;
+import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.ScheduleStatus;
 import com.walkin.entity.Student;
 import com.walkin.exception.ResourceNotFoundException;
@@ -189,6 +190,23 @@ class CandidateRoundScheduleControllerTests {
                 .andExpect(status().isForbidden());
     }
 
+    @Test
+    void recruiterCanViewDueNotificationsWithoutContactDetails() throws Exception {
+        CandidateRoundSchedule schedule = schedule();
+        when(scheduleService.getDueNotificationSchedules()).thenReturn(List.of(schedule));
+
+        mockMvc.perform(get("/api/candidate-round-schedules/due")
+                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].scheduleId").value(10))
+                .andExpect(jsonPath("$[0].studentId").value(1))
+                .andExpect(jsonPath("$[0].notificationChannel").value("EMAIL"))
+                .andExpect(jsonPath("$[0].advanceNoticeMinutes").value(30))
+                .andExpect(jsonPath("$[0].notificationDueAt").value("2099-01-01T09:30:00Z"))
+                .andExpect(jsonPath("$[0].email").doesNotExist())
+                .andExpect(jsonPath("$[0].contactNumber").doesNotExist());
+    }
+
     private CandidateRoundSchedule schedule() {
         return schedule(ScheduleStatus.SCHEDULED);
     }
@@ -200,6 +218,8 @@ class CandidateRoundScheduleControllerTests {
         when(schedule.getScheduleId()).thenReturn(10);
         when(schedule.getStudent()).thenReturn(student);
         when(student.getStudentId()).thenReturn(1);
+        when(student.getNotificationChannel()).thenReturn(NotificationChannel.EMAIL);
+        when(student.getAdvanceNoticeMinutes()).thenReturn(30);
         when(schedule.getCompanyRound()).thenReturn(companyRound);
         when(companyRound.getCompanyRoundId()).thenReturn(2);
         when(schedule.getReportingTime()).thenReturn(

@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 public interface CandidateRoundScheduleService {
 
@@ -19,4 +20,6 @@ public interface CandidateRoundScheduleService {
     CandidateRoundSchedule reschedule(Integer scheduleId, OffsetDateTime reportingTime);
 
     CandidateRoundSchedule updateStatus(Integer scheduleId, ScheduleStatus status);
+
+    List<CandidateRoundSchedule> getDueNotificationSchedules();
 }

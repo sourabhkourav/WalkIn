@@ -61,3 +61,14 @@ SCHEDULED -> NOTIFIED -> REPORTED
 `REPORTED`, `MISSED`, and `CANCELLED` are terminal states. Moving to `NOTIFIED` records
 `notifiedAt`; moving to `REPORTED` records `reportedAt`. Repeating the current status is safe and
 does not replace the original timestamp. Invalid lifecycle transitions return HTTP `409 Conflict`.
+
+## Due notifications
+
+Authenticated administrators and recruiters can inspect the next due notification batch with
+`GET /api/candidate-round-schedules/due`. A schedule becomes due when the current time reaches its
+reporting time minus the candidate's chosen advance-notice minutes. Only future `SCHEDULED` entries
+are returned, ordered by reporting time, with a maximum batch size of 100.
+
+The response contains IDs, timing, and the selected channel, but excludes email addresses, phone
+numbers, resumes, and other candidate details. This endpoint detects due work only: it does not send
+a message or change the schedule to `NOTIFIED`.

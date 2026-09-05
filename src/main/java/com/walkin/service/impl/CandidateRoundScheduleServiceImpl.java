@@ -19,12 +19,15 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
 public class CandidateRoundScheduleServiceImpl implements CandidateRoundScheduleService {
+
+    private static final int MAX_ADVANCE_NOTICE_MINUTES = 240;
 
     private static final Map<ScheduleStatus, Set<ScheduleStatus>> ALLOWED_TRANSITIONS = Map.of(
             ScheduleStatus.SCHEDULED, Set.of(
@@ -132,6 +135,20 @@ public class CandidateRoundScheduleServiceImpl implements CandidateRoundSchedule
         return scheduleRepository.save(schedule);
     }
 
+    @Override
+    public List<CandidateRoundSchedule> getDueNotificationSchedules() {
+        OffsetDateTime currentTime = now();
+        OffsetDateTime windowEnd = currentTime.plusMinutes(MAX_ADVANCE_NOTICE_MINUTES);
+        return scheduleRepository
+                .findByStatusAndReportingTimeBetweenOrderByReportingTimeAsc(
+                        ScheduleStatus.SCHEDULED, currentTime, windowEnd)
+                .stream()
+                .filter(schedule -> schedule.getReportingTime().isAfter(currentTime))
+                .filter(schedule -> !notificationDueAt(schedule).isAfter(currentTime))
+                .limit(100)
+                .toList();
+    }
+
     private void requireFutureReportingTime(OffsetDateTime reportingTime) {
         if (reportingTime == null || !reportingTime.isAfter(now())) {
             throw new IllegalArgumentException("reportingTime must be in the future");
@@ -140,5 +157,10 @@ public class CandidateRoundScheduleServiceImpl implements CandidateRoundSchedule
 
     private OffsetDateTime now() {
         return OffsetDateTime.ofInstant(clock.instant(), ZoneOffset.UTC);
+    }
+
+    private OffsetDateTime notificationDueAt(CandidateRoundSchedule schedule) {
+        return schedule.getReportingTime()
+                .minusMinutes(schedule.getStudent().getAdvanceNoticeMinutes());
     }
 }

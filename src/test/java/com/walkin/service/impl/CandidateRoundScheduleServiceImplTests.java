@@ -233,6 +233,42 @@ class CandidateRoundScheduleServiceImplTests {
         verifyNoInteractions(scheduleRepository);
     }
 
+    @Test
+    void returnsOnlySchedulesInsideTheirCandidateNoticeWindow() {
+        CandidateRoundSchedule dueAtBoundary = schedule(
+                OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(30), 30);
+        CandidateRoundSchedule notDueYet = schedule(
+                OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(31), 30);
+        CandidateRoundSchedule dueWithLongerNotice = schedule(
+                OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(120), 120);
+        CandidateRoundSchedule reportingTimePassed = schedule(
+                OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).minusMinutes(1), 30);
+        when(scheduleRepository
+                .findByStatusAndReportingTimeBetweenOrderByReportingTimeAsc(
+                        ScheduleStatus.SCHEDULED,
+                        OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC),
+                        OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(240)))
+                .thenReturn(List.of(
+                        reportingTimePassed, dueAtBoundary, notDueYet, dueWithLongerNotice));
+
+        assertThat(scheduleService.getDueNotificationSchedules())
+                .containsExactly(dueAtBoundary, dueWithLongerNotice);
+    }
+
+    @Test
+    void limitsDueNotificationBatchAfterEvaluatingNoticeWindows() {
+        CandidateRoundSchedule due = schedule(
+                OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(30), 30);
+        when(scheduleRepository
+                .findByStatusAndReportingTimeBetweenOrderByReportingTimeAsc(
+                        ScheduleStatus.SCHEDULED,
+                        OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC),
+                        OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusMinutes(240)))
+                .thenReturn(java.util.Collections.nCopies(101, due));
+
+        assertThat(scheduleService.getDueNotificationSchedules()).hasSize(100);
+    }
+
     private CandidateRoundScheduleRequest request() {
         return new CandidateRoundScheduleRequest(
                 1, 2, OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusHours(1));
@@ -241,6 +277,17 @@ class CandidateRoundScheduleServiceImplTests {
     private CandidateRoundSchedule schedule(ScheduleStatus status) {
         CandidateRoundSchedule schedule = new CandidateRoundSchedule();
         schedule.setStatus(status);
+        return schedule;
+    }
+
+    private CandidateRoundSchedule schedule(
+            OffsetDateTime reportingTime,
+            int advanceNoticeMinutes) {
+        Student student = new Student();
+        student.setAdvanceNoticeMinutes(advanceNoticeMinutes);
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.SCHEDULED);
+        schedule.setStudent(student);
+        schedule.setReportingTime(reportingTime);
         return schedule;
     }
 }

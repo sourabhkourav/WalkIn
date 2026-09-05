@@ -5,6 +5,7 @@ import com.walkin.dto.CandidateRoundScheduleRequest;
 import com.walkin.dto.CandidateRoundScheduleResponse;
 import com.walkin.dto.CandidateRoundRescheduleRequest;
 import com.walkin.dto.CandidateRoundScheduleStatusRequest;
+import com.walkin.dto.DueCandidateNotificationResponse;
 import com.walkin.dto.PageResponse;
 import com.walkin.service.CandidateRoundScheduleService;
 import jakarta.validation.Valid;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PutMapping;
 
 import java.net.URI;
+import java.util.List;
 import java.util.Set;
 
 @RestController
@@ -64,6 +66,14 @@ public class CandidateRoundScheduleController {
         return ResponseEntity.ok(PageResponse.from(scheduleService.getSchedules(
                 pageRequestFactory.create(page, size, sort, direction, ALLOWED_SORT_FIELDS))
                 .map(CandidateRoundScheduleResponse::from)));
+    }
+
+    @GetMapping("/due")
+    public ResponseEntity<List<DueCandidateNotificationResponse>> getDueNotifications() {
+        return ResponseEntity.ok(scheduleService.getDueNotificationSchedules()
+                .stream()
+                .map(DueCandidateNotificationResponse::from)
+                .toList());
     }
 
     @PutMapping("/{id}/reporting-time")
