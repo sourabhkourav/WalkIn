@@ -136,28 +136,3 @@ validates the mapped entities against that schema at startup; it does not modify
 With the application running, open `http://localhost:8080/swagger-ui.html` for interactive API
 documentation. Log in through `/api/auth/login`, select **Authorize**, and paste the returned JWT
 before trying protected operations. The OpenAPI JSON is at `http://localhost:8080/v3/api-docs`.
-
-## What to build next
-
-Work through these items in order:
-
-1. **Completed:** Add JUnit and Mockito tests for company, interview-round, application, company-round, and
-   round-selection services and controllers. Cover validation, missing records, duplicate data,
-   and relationship errors.
-2. **Completed:** Add Testcontainers integration tests against PostgreSQL so Flyway migrations, constraints, and
-   JPA mappings are verified on the same database engine used in production.
-3. **Completed:** Add OpenAPI documentation and Swagger UI, including authentication setup.
-4. **Completed:** Replace the single HTTP Basic account with application users, BCrypt password hashes, roles,
-   and token-based authentication.
-5. **Completed:** Add pagination, sorting, filtering, and database uniqueness constraints to collection APIs.
-6. **Completed:** Add CI that runs the Maven verification suite and builds the Docker image for every pull request.
-7. **Completed (application):** Add Actuator health checks, structured logs, metrics, production
-   defaults, and proxy-aware HTTPS handling. HTTPS termination, backups, and secret-manager wiring
-   belong to the target deployment platform.
-
-The immediate next milestone is a frontend client for the WalkIn APIs.
-
-## Secret handling
-
-Never commit `.env` or real credentials. If a real credential is committed, rotate it immediately;
-removing it from the current file or rewriting Git history does not invalidate the exposed value.
