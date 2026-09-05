@@ -57,3 +57,7 @@ After signing in, the organizer dashboard selects the newest hiring drive return
 Create and open a drive, then register a synthetic candidate through its public token to exercise
 queue filtering and status actions. The dashboard intentionally does not display the candidate's
 notification destination.
+
+To exercise the candidate experience, open `/register/{registrationToken}` on the frontend origin,
+using the one-time raw token returned when the drive was created. In production, the web server must
+route this deep link to the frontend `index.html`. Use only synthetic candidate data locally.

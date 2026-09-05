@@ -17,6 +17,7 @@ and recruitment decisions.
 - Minimal public drive responses that omit internal IDs, contact details, and token metadata
 - Public registration acknowledgements that never echo candidate details or resume content
 - PDF resume validation with 2 MB file and 3 MB request limits
+- Candidate registration links contain only a drive token and never candidate information
 
 ## Secret management
 
@@ -37,6 +38,8 @@ GitHub push protection or an equivalent server-side control should also be enabl
 - Collect only the personal data required to operate the hiring drive.
 - Reject values submitted for fields the hiring drive configured as hidden.
 - Keep candidate-controlled notification destinations separate from company-requested contact data.
+- Treat registration links like venue invitations: share them intentionally and close the drive
+  when registration should stop.
 - Omit notification destinations and resume bytes from candidate queue responses.
 - Expose resume content only through the authenticated PDF download endpoint.
 - Record the authenticated operator for every real queue-status change.

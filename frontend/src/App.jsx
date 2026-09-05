@@ -2,6 +2,8 @@ import { AuthProvider } from './auth/AuthProvider'
 import { useAuth } from './auth/authContext'
 import LoginForm from './components/LoginForm'
 import OrganizerDashboard from './components/OrganizerDashboard'
+import PublicRegistrationPage from './components/PublicRegistrationPage'
+import { registrationTokenFromPath } from './utils/registrationRoute'
 import './App.css'
 
 function Application() {
@@ -13,6 +15,11 @@ function Application() {
 }
 
 function App() {
+  const registrationToken = registrationTokenFromPath(window.location.pathname)
+  if (registrationToken) {
+    return <PublicRegistrationPage registrationToken={registrationToken} />
+  }
+
   return (
     <AuthProvider>
       <Application />

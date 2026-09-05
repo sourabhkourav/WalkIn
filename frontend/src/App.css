@@ -702,3 +702,342 @@ button:disabled {
     display: grid;
   }
 }
+
+.public-registration-shell {
+  min-height: 100svh;
+  padding: 24px;
+  background:
+    radial-gradient(circle at 90% 0, rgba(37, 99, 235, .16), transparent 28rem),
+    linear-gradient(180deg, #f8fafc, #eef2f7);
+}
+
+.public-brand {
+  display: flex;
+  width: min(100%, 840px);
+  align-items: center;
+  gap: 10px;
+  margin: 0 auto 36px;
+  color: var(--heading);
+}
+
+.public-brand > span:last-child {
+  margin-left: auto;
+  color: #64748b;
+  font-size: .82rem;
+  font-weight: 700;
+}
+
+.public-registration-content {
+  width: min(100%, 840px);
+  margin: 0 auto;
+}
+
+.public-drive-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, .7fr);
+  align-items: end;
+  gap: 40px;
+  margin-bottom: 30px;
+}
+
+.public-drive-header h1,
+.public-result h1 {
+  font-size: clamp(2.35rem, 8vw, 4.4rem);
+}
+
+.drive-facts {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 18px;
+  border: 1px solid rgba(203, 213, 225, .8);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .72);
+}
+
+.drive-facts div {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  gap: 12px;
+}
+
+.drive-facts dt {
+  color: #64748b;
+  font-size: .75rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.drive-facts dd {
+  margin: 0;
+  color: var(--heading);
+  font-size: .9rem;
+  font-weight: 650;
+}
+
+.registration-progress {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  color: #94a3b8;
+  font-size: .78rem;
+  font-weight: 750;
+  list-style: none;
+}
+
+.registration-progress li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 12px;
+  border-bottom: 3px solid #dbe3ed;
+}
+
+.registration-progress li.active,
+.registration-progress li.complete {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.registration-progress li span {
+  display: grid;
+  width: 24px;
+  height: 24px;
+  place-items: center;
+  border-radius: 50%;
+  color: white;
+  background: #94a3b8;
+  font-size: .72rem;
+}
+
+.registration-progress li.active span,
+.registration-progress li.complete span {
+  background: var(--accent);
+}
+
+.registration-card {
+  padding: clamp(24px, 6vw, 48px);
+  border: 1px solid #dbe3ed;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, .96);
+  box-shadow: 0 22px 60px rgba(15, 23, 42, .08);
+}
+
+.registration-card > p:not(.step-label) {
+  margin: 8px 0 28px;
+  line-height: 1.55;
+}
+
+.step-label {
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: .74rem;
+  font-weight: 850;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.public-form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.public-form .field > span {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-form .field small {
+  color: #64748b;
+  font-weight: 500;
+}
+
+.file-field,
+.channel-options,
+.privacy-note,
+.public-form > .error-message,
+.public-form-actions,
+.wide-button {
+  grid-column: 1 / -1;
+}
+
+.file-field input {
+  padding: 8px;
+}
+
+.file-field input::file-selector-button {
+  margin-right: 12px;
+  padding: 8px 11px;
+  border: 0;
+  border-radius: 7px;
+  color: var(--heading);
+  background: #e2e8f0;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.channel-options {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.channel-options legend {
+  margin-bottom: 8px;
+  color: var(--heading);
+  font-size: .9rem;
+  font-weight: 700;
+}
+
+.channel-options label {
+  display: flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--heading);
+  background: white;
+  font-size: .88rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.channel-options label.selected {
+  border-color: var(--accent);
+  background: #eff6ff;
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.channel-options input {
+  width: 16px;
+  min-height: 16px;
+  margin: 0;
+}
+
+.privacy-note {
+  padding: 14px;
+  border-left: 3px solid #60a5fa;
+  border-radius: 0 8px 8px 0;
+  color: #475569;
+  background: #eff6ff;
+  font-size: .84rem;
+  line-height: 1.5;
+}
+
+.public-form-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.public-loading,
+.public-result {
+  display: grid;
+  min-height: min(620px, calc(100svh - 130px));
+  place-content: center;
+  justify-items: center;
+  text-align: center;
+}
+
+.public-result > p {
+  max-width: 560px;
+  line-height: 1.6;
+}
+
+.result-icon {
+  display: grid;
+  width: 62px;
+  height: 62px;
+  place-items: center;
+  margin-bottom: 22px;
+  border-radius: 18px;
+  color: #991b1b;
+  background: #fee2e2;
+  font-size: 1.8rem;
+  font-weight: 900;
+}
+
+.success-icon {
+  color: #166534;
+  background: #dcfce7;
+}
+
+.reference-card {
+  width: min(100%, 520px);
+  box-sizing: border-box;
+  margin: 22px 0;
+  padding: 18px;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  background: #eff6ff;
+}
+
+.reference-card span,
+.reference-card strong {
+  display: block;
+}
+
+.reference-card span {
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: .72rem;
+  font-weight: 800;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+
+.reference-card strong {
+  overflow-wrap: anywhere;
+  color: var(--heading);
+  font-family: ui-monospace, SFMono-Regular, Consolas, monospace;
+  font-size: .94rem;
+}
+
+.result-help {
+  color: #64748b;
+  font-size: .85rem;
+}
+
+@media (max-width: 680px) {
+  .public-registration-shell {
+    padding: 16px 12px 32px;
+  }
+
+  .public-brand {
+    margin-bottom: 28px;
+  }
+
+  .public-drive-header {
+    grid-template-columns: 1fr;
+    gap: 20px;
+  }
+
+  .public-form {
+    grid-template-columns: 1fr;
+  }
+
+  .public-form .field,
+  .channel-options,
+  .privacy-note,
+  .public-form-actions,
+  .wide-button {
+    grid-column: 1;
+  }
+
+  .channel-options {
+    grid-template-columns: 1fr;
+  }
+
+  .public-form-actions button {
+    flex: 1;
+  }
+}

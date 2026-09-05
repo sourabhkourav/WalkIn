@@ -1,16 +1,32 @@
-# React + Vite
+# WalkIn frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+The React client provides two experiences:
 
-Currently, two official plugins are available:
+- `/` — authenticated venue operations and candidate queue management
+- `/register/{registrationToken}` — public, drive-specific candidate registration
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+The public form renders only fields enabled by the hiring drive. Candidate reminder preferences are
+collected separately and private notification destinations are not shown in the organizer queue.
 
-## React Compiler
+## Development
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Run from this directory:
 
-## Expanding the Oxlint configuration
+```powershell
+npm.cmd install
+npm.cmd run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+Vite proxies `/api` to `http://localhost:8080`. Start the Spring Boot API and PostgreSQL separately.
+See the repository `docs` directory for complete setup, testing, security, and API guidance.
+
+## Verification
+
+```powershell
+npm.cmd run lint
+npm.cmd test
+npm.cmd run build
+```
+
+Do not put credentials, registration tokens, or candidate information in frontend environment
+files, source code, tests, screenshots, or logs.

@@ -39,6 +39,11 @@ Status filters, text search, and pagination remain server-side so the browser do
 all candidate records. Resume downloads use an authenticated request and a temporary object URL;
 the bearer token is never placed in a download URL.
 
+The public frontend route `/register/{registrationToken}` bypasses organizer authentication and
+uses only the two allowlisted public hiring-drive endpoints. It renders the server-provided field
+requirements, then collects candidate-controlled notification preferences in a separate step. The
+browser performs helpful validation, while the backend remains the source of truth for every rule.
+
 ## Authentication flow
 
 The client submits credentials to `/api/auth/login`. After authentication, the API returns a
