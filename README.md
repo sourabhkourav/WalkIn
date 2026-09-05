@@ -1,138 +1,73 @@
 # WalkIn
 
-WalkIn is a full-stack venue operations platform for offline hiring drives. It helps staff register
-candidates, manage interview rounds, assign reporting times, and record each candidate's preferred
-notification channel and advance-notice period.
+**Helping offline hiring drives run on time.**
 
-The goal is to let candidates leave the waiting area when their interview is not immediate, then
-notify them early enough to return and report at their assigned time.
+WalkIn is a venue operations platform for offline recruitment drives. It helps hiring teams manage
+candidates and interview rounds while giving candidates enough freedom to leave the waiting area
+when their interview is not immediate.
+
+Candidates record how early they want to be contacted and which notification channel they prefer.
+Venue staff can then coordinate reporting times and track progress through each interview round.
+
+## Why WalkIn
+
+Offline hiring drives often involve long, uncertain waiting periods. Candidates may miss meals or
+remain near an interview room because they do not know when they will be called. At the same time,
+venue coordinators need one reliable view of candidates, companies, applications, and round results.
+
+WalkIn is designed to make that flow predictable: candidates report at an assigned time, and staff
+manage the drive from a single system.
+
+## How it works
+
+1. Staff register a candidate at the venue.
+2. The candidate chooses a preferred notification channel and advance-notice period.
+3. Staff manage applications, interview rounds, and reporting schedules.
+4. The candidate returns and remains available at the specified reporting time.
+5. Staff record the candidate's progress through the recruitment process.
+
+## Core features
+
+- Candidate registration, search, pagination, editing, and deletion
+- Company, application, and interview-round management
+- Candidate notification-channel and advance-notice preferences
+- Interview reporting-time and round-status persistence
+- Candidate selection and recruitment-progress tracking
+- Role-based access for administrators and recruiters
+
+## Product status
+
+WalkIn is under active development. Candidate management and the supporting recruitment APIs are
+available. Reporting schedules are persisted, while automated SMS, email, and WhatsApp delivery is
+planned and is not yet active.
 
 ## Technology
 
-- Java 25 LTS
-- Spring Boot 4.1
-- PostgreSQL 18
-- Spring Data JPA and Hibernate
-- Flyway database migrations
-- Spring Security with stateless JWT authentication and BCrypt password hashing
-- Maven Wrapper
-- JUnit and Mockito for automated tests
-- H2 for isolated integration tests
-- Docker and Docker Compose
-- OpenAPI 3 and Swagger UI
-- Actuator health probes, Prometheus metrics, and structured production logs
+WalkIn uses Java 25, Spring Boot, React, PostgreSQL, Flyway, and Docker. Authentication uses
+short-lived JWT access tokens, role-based authorization, and BCrypt password hashing. The automated
+test suite uses JUnit, Mockito, Vitest, and Testcontainers.
 
-## Run with Docker
+## Quick start
 
-Docker Desktop is the only requirement for running the complete stack.
-
-1. Create your local environment file:
-
-   ```powershell
-   Copy-Item .env.example .env
-   ```
-
-2. Replace every placeholder password in `.env`. The file is ignored by Git and is read by both
-   Docker Compose and Spring Boot.
-
-3. Build and start the API and PostgreSQL:
-
-   ```powershell
-   docker compose up --build
-   ```
-
-4. The API is available at `http://localhost:8080`. Obtain a token from `POST /api/auth/login`
-   using the `APP_ADMIN_USERNAME` and `APP_ADMIN_PASSWORD` values from `.env`.
-
-5. Stop the stack without deleting database data:
-
-   ```powershell
-   docker compose down
-   ```
-
-PostgreSQL data is stored in the named `postgres-data` volume. Run
-`docker compose down --volumes` only when you intentionally want to delete local database data.
-
-## Run for local development
-
-Install JDK 25, create `.env` as described above, then start only PostgreSQL and run Spring Boot
-on the host:
+Docker Desktop is the simplest way to run the backend and database locally:
 
 ```powershell
-docker compose up -d postgres
-.\mvnw.cmd spring-boot:run
+Copy-Item .env.example .env
+# Replace every placeholder in .env before continuing.
+docker compose up --build
 ```
 
-## Test
+The API is available at `http://localhost:8080`, and Swagger UI is available at
+`http://localhost:8080/swagger-ui.html`. Never commit `.env` or use development credentials in a
+deployed environment.
 
-Service unit tests use JUnit and Mockito. Integration tests use an in-memory H2 database in
-PostgreSQL compatibility mode. A local database, Docker, and `.env` file are not required.
+## Documentation
 
-```powershell
-.\mvnw.cmd test
-```
-
-## Continuous integration
-
-GitHub Actions runs the complete Maven verification suite on Java 25 for pushes and pull requests.
-The Linux runner provides Docker, so the PostgreSQL Testcontainers test runs instead of being
-skipped. CI also validates `compose.yaml` and builds the production image without publishing it.
-Failed test reports are retained as workflow artifacts for seven days. Dependabot checks Maven,
-GitHub Actions, and Docker dependencies weekly.
-
-## Operations
-
-The public health endpoints are `/actuator/health`, `/actuator/health/liveness`, and
-`/actuator/health/readiness`; component details are not exposed. `/actuator/prometheus` requires an
-`ADMIN` bearer token. Docker Compose enables the `prod` profile, uses the readiness endpoint for
-its application health check, emits ECS-formatted JSON logs, and enables graceful shutdown.
-Production deployments should terminate HTTPS at the ingress or load balancer, inject credentials
-from the platform's secret manager, and configure automated PostgreSQL backups with restore tests;
-these infrastructure responsibilities are intentionally not embedded in the application image.
-
-## REST endpoints
-
-All resource endpoints require a JWT bearer token. `ADMIN` can read and modify resources;
-`RECRUITER` can read them. Obtain a short-lived access token with:
-
-```http
-POST /api/auth/login
-Content-Type: application/json
-
-{"username":"walkin-admin","password":"your-password"}
-```
-
-| Resource | Endpoint |
-| --- | --- |
-| Students | `/api/students` |
-| Companies | `/api/companies` |
-| Interview round definitions | `/api/interview-rounds` |
-| Rounds assigned to companies | `/api/company-rounds` |
-| Student applications | `/api/applications` |
-| Student round decisions | `/api/round-selections` |
-| Application users (admin only) | `/api/users` |
-
-Each resource supports `POST`, `GET` collection, `GET /{id}`, `PUT /{id}`, and `DELETE /{id}`.
-Student, company, and interview-round collections accept `page`, `size` (maximum 100), `sort`,
-`direction`, and `query` parameters. Collection responses include content and page metadata.
-
-Administrators can create users, list users, change roles or enabled status, and reset passwords
-through `/api/users`. Password hashes are never included in API responses, and the last enabled
-administrator cannot be disabled or demoted.
-Relationship requests use IDs. For example, assigning a round to a company uses:
-
-```json
-{
-  "companyId": 1,
-  "interviewRoundId": 1
-}
-```
-
-Schema changes belong in versioned scripts under `src/main/resources/db/migration`. Hibernate
-validates the mapped entities against that schema at startup; it does not modify production tables.
-
-## API documentation
-
-With the application running, open `http://localhost:8080/swagger-ui.html` for interactive API
-documentation. Log in through `/api/auth/login`, select **Authorize**, and paste the returned JWT
-before trying protected operations. The OpenAPI JSON is at `http://localhost:8080/v3/api-docs`.
+- [Documentation guide](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Local development](docs/development.md)
+- [API guide](docs/api.md)
+- [Database and migrations](docs/database.md)
+- [Testing](docs/testing.md)
+- [Security](docs/security.md)
+- [Operations](docs/operations.md)
