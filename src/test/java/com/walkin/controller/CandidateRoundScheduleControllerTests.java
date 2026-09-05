@@ -23,12 +23,15 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -141,7 +144,56 @@ class CandidateRoundScheduleControllerTests {
                 .andExpect(jsonPath("$.message").value("size must be between 1 and 100"));
     }
 
+    @Test
+    void administratorCanRescheduleFutureReportingTime() throws Exception {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.SCHEDULED);
+        when(scheduleService.reschedule(eq(10), any(OffsetDateTime.class))).thenReturn(schedule);
+
+        mockMvc.perform(put("/api/candidate-round-schedules/10/reporting-time")
+                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reportingTime\":\"2099-01-01T10:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.reportingTime").value("2099-01-01T10:00:00Z"));
+    }
+
+    @Test
+    void pastRescheduleRequestIsRejected() throws Exception {
+        mockMvc.perform(put("/api/candidate-round-schedules/10/reporting-time")
+                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"reportingTime\":\"2020-01-01T10:00:00Z\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.reportingTime").exists());
+    }
+
+    @Test
+    void administratorCanAdvanceScheduleStatus() throws Exception {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.NOTIFIED);
+        when(scheduleService.updateStatus(10, ScheduleStatus.NOTIFIED)).thenReturn(schedule);
+
+        mockMvc.perform(patch("/api/candidate-round-schedules/10/status")
+                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"NOTIFIED\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("NOTIFIED"));
+    }
+
+    @Test
+    void recruiterCannotChangeScheduleStatus() throws Exception {
+        mockMvc.perform(patch("/api/candidate-round-schedules/10/status")
+                        .with(jwt().authorities(() -> "ROLE_RECRUITER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"NOTIFIED\"}"))
+                .andExpect(status().isForbidden());
+    }
+
     private CandidateRoundSchedule schedule() {
+        return schedule(ScheduleStatus.SCHEDULED);
+    }
+
+    private CandidateRoundSchedule schedule(ScheduleStatus status) {
         CandidateRoundSchedule schedule = org.mockito.Mockito.mock(CandidateRoundSchedule.class);
         Student student = org.mockito.Mockito.mock(Student.class);
         CompanyCustomRound companyRound = org.mockito.Mockito.mock(CompanyCustomRound.class);
@@ -152,7 +204,7 @@ class CandidateRoundScheduleControllerTests {
         when(companyRound.getCompanyRoundId()).thenReturn(2);
         when(schedule.getReportingTime()).thenReturn(
                 OffsetDateTime.parse("2099-01-01T10:00:00Z"));
-        when(schedule.getStatus()).thenReturn(ScheduleStatus.SCHEDULED);
+        when(schedule.getStatus()).thenReturn(status);
         return schedule;
     }
 

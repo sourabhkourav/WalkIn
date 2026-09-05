@@ -3,17 +3,21 @@ package com.walkin.controller;
 import com.walkin.config.PageRequestFactory;
 import com.walkin.dto.CandidateRoundScheduleRequest;
 import com.walkin.dto.CandidateRoundScheduleResponse;
+import com.walkin.dto.CandidateRoundRescheduleRequest;
+import com.walkin.dto.CandidateRoundScheduleStatusRequest;
 import com.walkin.dto.PageResponse;
 import com.walkin.service.CandidateRoundScheduleService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 import java.net.URI;
 import java.util.Set;
@@ -60,5 +64,21 @@ public class CandidateRoundScheduleController {
         return ResponseEntity.ok(PageResponse.from(scheduleService.getSchedules(
                 pageRequestFactory.create(page, size, sort, direction, ALLOWED_SORT_FIELDS))
                 .map(CandidateRoundScheduleResponse::from)));
+    }
+
+    @PutMapping("/{id}/reporting-time")
+    public ResponseEntity<CandidateRoundScheduleResponse> reschedule(
+            @PathVariable Integer id,
+            @Valid @RequestBody CandidateRoundRescheduleRequest request) {
+        return ResponseEntity.ok(CandidateRoundScheduleResponse.from(
+                scheduleService.reschedule(id, request.reportingTime())));
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<CandidateRoundScheduleResponse> updateStatus(
+            @PathVariable Integer id,
+            @Valid @RequestBody CandidateRoundScheduleStatusRequest request) {
+        return ResponseEntity.ok(CandidateRoundScheduleResponse.from(
+                scheduleService.updateStatus(id, request.status())));
     }
 }

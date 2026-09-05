@@ -46,3 +46,18 @@ and the last enabled administrator cannot be disabled or demoted.
 Candidate reporting schedules support creation, retrieval by ID, and paginated listing. Schedule
 responses contain relationship IDs instead of nested candidate and company records, preventing
 unrelated personal or business data from being exposed through this resource.
+
+Administrators can reschedule a future reporting time with
+`PUT /api/candidate-round-schedules/{id}/reporting-time` while the schedule is still `SCHEDULED`.
+They can advance its lifecycle with `PATCH /api/candidate-round-schedules/{id}/status`.
+
+```text
+SCHEDULED -> NOTIFIED -> REPORTED
+     |           |
+     +-----------+----> MISSED
+     +-----------+----> CANCELLED
+```
+
+`REPORTED`, `MISSED`, and `CANCELLED` are terminal states. Moving to `NOTIFIED` records
+`notifiedAt`; moving to `REPORTED` records `reportedAt`. Repeating the current status is safe and
+does not replace the original timestamp. Invalid lifecycle transitions return HTTP `409 Conflict`.

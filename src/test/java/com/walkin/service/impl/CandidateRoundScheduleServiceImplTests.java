@@ -10,17 +10,20 @@ import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CandidateRoundScheduleRepository;
 import com.walkin.repository.CompanyCustomRoundRepository;
 import com.walkin.repository.StudentRepository;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,9 +34,14 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.times;
 
 @ExtendWith(MockitoExtension.class)
 class CandidateRoundScheduleServiceImplTests {
+
+    private static final Instant NOW = Instant.parse("2026-09-05T10:00:00Z");
+    private static final Clock FIXED_CLOCK = Clock.fixed(NOW, ZoneOffset.UTC);
 
     @Mock
     private CandidateRoundScheduleRepository scheduleRepository;
@@ -44,12 +52,17 @@ class CandidateRoundScheduleServiceImplTests {
     @Mock
     private CompanyCustomRoundRepository companyRoundRepository;
 
-    @InjectMocks
     private CandidateRoundScheduleServiceImpl scheduleService;
+
+    @BeforeEach
+    void setUp() {
+        scheduleService = new CandidateRoundScheduleServiceImpl(
+                scheduleRepository, studentRepository, companyRoundRepository, FIXED_CLOCK);
+    }
 
     @Test
     void createsScheduledEntryForExistingStudentAndCompanyRound() {
-        OffsetDateTime reportingTime = OffsetDateTime.now().plusHours(2);
+        OffsetDateTime reportingTime = OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusHours(2);
         CandidateRoundScheduleRequest request = new CandidateRoundScheduleRequest(1, 2, reportingTime);
         Student student = new Student();
         CompanyCustomRound companyRound = new CompanyCustomRound();
@@ -133,7 +146,101 @@ class CandidateRoundScheduleServiceImplTests {
         assertThat(scheduleService.getSchedules(pageable)).isSameAs(page);
     }
 
+    @Test
+    void reschedulesOnlyScheduledEntries() {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.SCHEDULED);
+        OffsetDateTime newTime = OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusHours(3);
+        when(scheduleRepository.findById(10)).thenReturn(Optional.of(schedule));
+        when(scheduleRepository.save(schedule)).thenReturn(schedule);
+
+        assertThat(scheduleService.reschedule(10, newTime)).isSameAs(schedule);
+        assertThat(schedule.getReportingTime()).isEqualTo(newTime);
+        verify(scheduleRepository).save(schedule);
+    }
+
+    @Test
+    void rejectsReschedulingAfterNotification() {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.NOTIFIED);
+        when(scheduleRepository.findById(10)).thenReturn(Optional.of(schedule));
+
+        assertThatThrownBy(() -> scheduleService.reschedule(
+                10, OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusHours(3)))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessage("Only a SCHEDULED candidate round can be rescheduled");
+
+        verify(scheduleRepository, never()).save(any());
+    }
+
+    @Test
+    void rejectsPastReportingTimeInsideServiceBoundary() {
+        assertThatThrownBy(() -> scheduleService.reschedule(
+                10, OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).minusSeconds(1)))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("reportingTime must be in the future");
+
+        verifyNoInteractions(scheduleRepository);
+    }
+
+    @Test
+    void recordsNotificationAndReportingTimesDuringTransitions() {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.SCHEDULED);
+        when(scheduleRepository.findById(10)).thenReturn(Optional.of(schedule));
+        when(scheduleRepository.save(schedule)).thenReturn(schedule);
+
+        scheduleService.updateStatus(10, ScheduleStatus.NOTIFIED);
+
+        assertThat(schedule.getStatus()).isEqualTo(ScheduleStatus.NOTIFIED);
+        assertThat(schedule.getNotifiedAt()).isEqualTo(
+                OffsetDateTime.parse("2026-09-05T10:00:00Z"));
+
+        scheduleService.updateStatus(10, ScheduleStatus.REPORTED);
+
+        assertThat(schedule.getStatus()).isEqualTo(ScheduleStatus.REPORTED);
+        assertThat(schedule.getReportedAt()).isEqualTo(
+                OffsetDateTime.parse("2026-09-05T10:00:00Z"));
+        verify(scheduleRepository, times(2)).save(schedule);
+    }
+
+    @Test
+    void rejectsTransitionFromTerminalStatus() {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.REPORTED);
+        when(scheduleRepository.findById(10)).thenReturn(Optional.of(schedule));
+
+        assertThatThrownBy(() -> scheduleService.updateStatus(10, ScheduleStatus.CANCELLED))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessage("Schedule status cannot change from REPORTED to CANCELLED");
+
+        verify(scheduleRepository, never()).save(any());
+    }
+
+    @Test
+    void repeatedStatusUpdateIsIdempotent() {
+        CandidateRoundSchedule schedule = schedule(ScheduleStatus.NOTIFIED);
+        when(scheduleRepository.findById(10)).thenReturn(Optional.of(schedule));
+
+        assertThat(scheduleService.updateStatus(10, ScheduleStatus.NOTIFIED)).isSameAs(schedule);
+
+        verify(scheduleRepository).findById(10);
+        verifyNoMoreInteractions(scheduleRepository);
+    }
+
+    @Test
+    void rejectsMissingTargetStatusInsideServiceBoundary() {
+        assertThatThrownBy(() -> scheduleService.updateStatus(10, null))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("status is required");
+
+        verifyNoInteractions(scheduleRepository);
+    }
+
     private CandidateRoundScheduleRequest request() {
-        return new CandidateRoundScheduleRequest(1, 2, OffsetDateTime.now().plusHours(1));
+        return new CandidateRoundScheduleRequest(
+                1, 2, OffsetDateTime.ofInstant(NOW, ZoneOffset.UTC).plusHours(1));
+    }
+
+    private CandidateRoundSchedule schedule(ScheduleStatus status) {
+        CandidateRoundSchedule schedule = new CandidateRoundSchedule();
+        schedule.setStatus(status);
+        return schedule;
     }
 }

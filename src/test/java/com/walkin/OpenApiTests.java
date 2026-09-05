@@ -32,7 +32,8 @@ class OpenApiTests {
                 .andExpect(jsonPath("$.paths['/api/students']").exists())
                 .andExpect(jsonPath("$.paths['/api/companies']").exists())
                 .andExpect(jsonPath("$.paths['/api/applications']").exists())
-                .andExpect(jsonPath("$.paths['/api/candidate-round-schedules']").exists());
+                .andExpect(jsonPath("$.paths['/api/candidate-round-schedules']").exists())
+                .andExpect(jsonPath("$.paths['/api/candidate-round-schedules/{id}/status']").exists());
     }
 
     @Test void swaggerUiIsPublic() throws Exception {
