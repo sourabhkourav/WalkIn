@@ -30,8 +30,14 @@ PostgreSQL <- Flyway migrations
 
 - `frontend/src/api` contains HTTP clients.
 - `frontend/src/auth` owns the authenticated browser session.
-- `frontend/src/components` contains forms and candidate views.
+- `frontend/src/components` contains authentication, queue, and organizer-dashboard views.
 - Component and API tests live beside the code they verify.
+
+The authenticated frontend begins with the venue operations dashboard. It loads hiring drives, then
+requests the selected drive's queue and summary independently of the legacy global student APIs.
+Status filters, text search, and pagination remain server-side so the browser does not need to load
+all candidate records. Resume downloads use an authenticated request and a temporary object URL;
+the bearer token is never placed in a download URL.
 
 ## Authentication flow
 

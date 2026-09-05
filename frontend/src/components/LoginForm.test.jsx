@@ -41,7 +41,7 @@ describe('LoginForm', () => {
     await user.type(screen.getByLabelText('Password'), 'secret-password')
     await user.click(screen.getByRole('button', { name: 'Sign in' }))
 
-    expect(await screen.findByRole('heading', { name: 'Welcome back' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Candidate queue' })).toBeInTheDocument()
     expect(JSON.parse(sessionStorage.getItem('walkin.auth'))).toEqual(session)
     expect(fetch).toHaveBeenCalledWith('/api/auth/login', expect.objectContaining({ method: 'POST' }))
   })

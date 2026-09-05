@@ -28,12 +28,12 @@ npm.cmd run lint
 npm.cmd run build
 ```
 
-Vitest and Testing Library verify authentication, API handling, forms, and candidate views. Tests
-must use synthetic candidate information and fake credentials.
+Vitest and Testing Library verify authentication, queue API calls, drive selection, filtering,
+status actions, privacy-safe rendering, forms, and responsive candidate views. Tests must use
+synthetic candidate information and fake credentials.
 
 ## Continuous integration
 
 GitHub Actions runs Maven verification on Java 25, validates Docker Compose, and builds the
 production image for pushes and pull requests. The workflow receives only non-production test
 values and has read-only repository permissions.
-

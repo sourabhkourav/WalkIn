@@ -53,3 +53,7 @@ npm.cmd run dev
 `frontend/.env.example` documents the optional API base URL. Leave it empty when the frontend uses
 the Vite development proxy or shares an origin with the API.
 
+After signing in, the organizer dashboard selects the newest hiring drive returned by the API.
+Create and open a drive, then register a synthetic candidate through its public token to exercise
+queue filtering and status actions. The dashboard intentionally does not display the candidate's
+notification destination.
