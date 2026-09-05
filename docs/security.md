@@ -13,6 +13,7 @@ and recruitment decisions.
 - Restricted user-management and Prometheus endpoints
 - Public health responses without component details
 - Request validation and database constraints
+- One-time public registration tokens stored as SHA-256 hashes rather than reusable raw values
 
 ## Secret management
 
@@ -45,4 +46,3 @@ public disclosure.
 This document describes engineering safeguards, not a claim of regulatory certification. A real
 deployment still requires threat modelling, dependency review, access auditing, and applicable
 privacy and employment-law review.
-

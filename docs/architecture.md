@@ -42,3 +42,13 @@ requests. The server is stateless and does not create an HTTP session.
 Administrators can read and modify resources. Recruiters have read-only access to general resource
 APIs and cannot access application-user management.
 
+## Hiring-drive model
+
+A hiring drive belongs to a company and contains its venue, operating window, lifecycle status, and
+public-registration credential. New drives begin in `DRAFT`; only `OPEN` drives may be resolved by a
+public registration token. `CLOSED` and `CANCELLED` are terminal states.
+
+The raw registration token is returned only when a drive is created. The database stores its
+SHA-256 hash, following the same principle used for password-reset and API-key lookup systems. QR
+codes will eventually contain a registration URL carrying the raw token, never company or candidate
+data directly.
