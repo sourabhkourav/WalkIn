@@ -32,6 +32,7 @@ Do not paste real tokens into documentation, issues, screenshots, or chat messag
 | Rounds assigned to companies | `/api/company-rounds` |
 | Student applications | `/api/applications` |
 | Student round decisions | `/api/round-selections` |
+| Candidate reporting schedules | `/api/candidate-round-schedules` |
 | Application users | `/api/users` |
 
 General resources support create, get, list, update, and delete operations. Student, company, and
@@ -42,5 +43,6 @@ to 100.
 including roles, enabled status, and password resets. Password hashes are never returned by the API,
 and the last enabled administrator cannot be disabled or demoted.
 
-Candidate reporting schedules currently have persistence support but do not yet have a public API.
-
+Candidate reporting schedules support creation, retrieval by ID, and paginated listing. Schedule
+responses contain relationship IDs instead of nested candidate and company records, preventing
+unrelated personal or business data from being exposed through this resource.
