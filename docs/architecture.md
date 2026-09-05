@@ -58,3 +58,15 @@ assignment between a drive and one of its company's rounds, and stores that roun
 drive. This keeps the reusable round definition separate from the event-specific order. Database
 constraints prevent a round or order position from being assigned twice within one drive, while the
 service layer also enforces company ownership and drive lifecycle rules.
+
+## Registration-form model
+
+Each hiring drive stores an allowlisted requirement for first name, last name, email, contact
+number, and resume. A requirement is `HIDDEN`, `OPTIONAL`, or `REQUIRED`. Using known fields keeps
+validation and data handling predictable before custom questions are introduced. Configuration is
+locked when the drive leaves `DRAFT`, so the public form contract remains stable while candidates
+are registering.
+
+Company-requested fields and candidate notification preferences are separate concepts. The company
+controls the registration fields; the candidate later chooses the notification channel and advance
+notice used to return to the venue on time.

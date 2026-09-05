@@ -1,9 +1,11 @@
 package com.walkin.service.impl;
 
 import com.walkin.dto.HiringDriveRequest;
+import com.walkin.dto.HiringDriveRegistrationFormRequest;
 import com.walkin.entity.Company;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveStatus;
+import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.exception.ResourceConflictException;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CompanyRepository;
@@ -82,6 +84,10 @@ class HiringDriveServiceImplTests {
         assertThat(saved.getVenue()).isEqualTo("Convention Centre");
         assertThat(saved.getStatus()).isEqualTo(HiringDriveStatus.DRAFT);
         assertThat(saved.getTokenExpiresAt()).isEqualTo(request.endsAt());
+        assertThat(saved.getFirstNameRequirement())
+                .isEqualTo(RegistrationFieldRequirement.REQUIRED);
+        assertThat(saved.getResumeRequirement())
+                .isEqualTo(RegistrationFieldRequirement.HIDDEN);
     }
 
     @Test
@@ -224,6 +230,71 @@ class HiringDriveServiceImplTests {
         assertThat(driveService.getDrives(pageable)).isSameAs(page);
     }
 
+    @Test
+    void updatesRegistrationFormWhileDriveIsDraft() {
+        HiringDrive drive = drive(HiringDriveStatus.DRAFT, time(8));
+        HiringDriveRegistrationFormRequest request = registrationForm();
+        when(driveRepository.findById(10)).thenReturn(Optional.of(drive));
+        when(driveRepository.save(drive)).thenReturn(drive);
+
+        assertThat(driveService.updateRegistrationForm(10, request)).isSameAs(drive);
+        assertThat(drive.getFirstNameRequirement())
+                .isEqualTo(RegistrationFieldRequirement.REQUIRED);
+        assertThat(drive.getLastNameRequirement())
+                .isEqualTo(RegistrationFieldRequirement.OPTIONAL);
+        assertThat(drive.getEmailRequirement())
+                .isEqualTo(RegistrationFieldRequirement.REQUIRED);
+        assertThat(drive.getContactNumberRequirement())
+                .isEqualTo(RegistrationFieldRequirement.HIDDEN);
+        assertThat(drive.getResumeRequirement())
+                .isEqualTo(RegistrationFieldRequirement.OPTIONAL);
+    }
+
+    @Test
+    void rejectsRegistrationFormChangesAfterDriveOpens() {
+        HiringDrive drive = drive(HiringDriveStatus.OPEN, time(8));
+        when(driveRepository.findById(10)).thenReturn(Optional.of(drive));
+
+        assertThatThrownBy(() -> driveService.updateRegistrationForm(10, registrationForm()))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessage(
+                        "Registration fields can be changed only while the hiring drive is DRAFT");
+
+        verify(driveRepository, never()).save(any());
+    }
+
+    @Test
+    void rejectsRegistrationFormWithoutVisibleFirstName() {
+        HiringDrive drive = drive(HiringDriveStatus.DRAFT, time(8));
+        when(driveRepository.findById(10)).thenReturn(Optional.of(drive));
+        HiringDriveRegistrationFormRequest request = new HiringDriveRegistrationFormRequest(
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.OPTIONAL,
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.OPTIONAL);
+
+        assertThatThrownBy(() -> driveService.updateRegistrationForm(10, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("firstName cannot be hidden");
+    }
+
+    @Test
+    void rejectsRegistrationFormWithoutContactMethod() {
+        HiringDrive drive = drive(HiringDriveStatus.DRAFT, time(8));
+        when(driveRepository.findById(10)).thenReturn(Optional.of(drive));
+        HiringDriveRegistrationFormRequest request = new HiringDriveRegistrationFormRequest(
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.OPTIONAL,
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.OPTIONAL);
+
+        assertThatThrownBy(() -> driveService.updateRegistrationForm(10, request))
+                .isInstanceOf(IllegalArgumentException.class)
+                .hasMessage("At least one of email or contactNumber must be visible");
+    }
+
     private void assertUnavailable(String token) {
         assertThatThrownBy(() -> driveService.getOpenDriveByRegistrationToken(token))
                 .isInstanceOf(ResourceNotFoundException.class)
@@ -237,6 +308,15 @@ class HiringDriveServiceImplTests {
                 "  Convention Centre  ",
                 time(1),
                 time(8));
+    }
+
+    private HiringDriveRegistrationFormRequest registrationForm() {
+        return new HiringDriveRegistrationFormRequest(
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.OPTIONAL,
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.OPTIONAL);
     }
 
     private HiringDrive drive(HiringDriveStatus status, OffsetDateTime endsAt) {

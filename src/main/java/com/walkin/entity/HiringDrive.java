@@ -64,6 +64,36 @@ public class HiringDrive {
     @NotNull
     private OffsetDateTime tokenExpiresAt;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "first_name_requirement", length = 20, nullable = false)
+    @NotNull
+    private RegistrationFieldRequirement firstNameRequirement =
+            RegistrationFieldRequirement.REQUIRED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "last_name_requirement", length = 20, nullable = false)
+    @NotNull
+    private RegistrationFieldRequirement lastNameRequirement =
+            RegistrationFieldRequirement.REQUIRED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "email_requirement", length = 20, nullable = false)
+    @NotNull
+    private RegistrationFieldRequirement emailRequirement =
+            RegistrationFieldRequirement.REQUIRED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "contact_number_requirement", length = 20, nullable = false)
+    @NotNull
+    private RegistrationFieldRequirement contactNumberRequirement =
+            RegistrationFieldRequirement.REQUIRED;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "resume_requirement", length = 20, nullable = false)
+    @NotNull
+    private RegistrationFieldRequirement resumeRequirement =
+            RegistrationFieldRequirement.HIDDEN;
+
     public Integer getDriveId() {
         return driveId;
     }
@@ -130,5 +160,46 @@ public class HiringDrive {
 
     public void setTokenExpiresAt(OffsetDateTime tokenExpiresAt) {
         this.tokenExpiresAt = tokenExpiresAt;
+    }
+
+    public RegistrationFieldRequirement getFirstNameRequirement() {
+        return firstNameRequirement;
+    }
+
+    public void setFirstNameRequirement(RegistrationFieldRequirement firstNameRequirement) {
+        this.firstNameRequirement = firstNameRequirement;
+    }
+
+    public RegistrationFieldRequirement getLastNameRequirement() {
+        return lastNameRequirement;
+    }
+
+    public void setLastNameRequirement(RegistrationFieldRequirement lastNameRequirement) {
+        this.lastNameRequirement = lastNameRequirement;
+    }
+
+    public RegistrationFieldRequirement getEmailRequirement() {
+        return emailRequirement;
+    }
+
+    public void setEmailRequirement(RegistrationFieldRequirement emailRequirement) {
+        this.emailRequirement = emailRequirement;
+    }
+
+    public RegistrationFieldRequirement getContactNumberRequirement() {
+        return contactNumberRequirement;
+    }
+
+    public void setContactNumberRequirement(
+            RegistrationFieldRequirement contactNumberRequirement) {
+        this.contactNumberRequirement = contactNumberRequirement;
+    }
+
+    public RegistrationFieldRequirement getResumeRequirement() {
+        return resumeRequirement;
+    }
+
+    public void setResumeRequirement(RegistrationFieldRequirement resumeRequirement) {
+        this.resumeRequirement = resumeRequirement;
     }
 }

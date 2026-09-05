@@ -38,3 +38,8 @@ only in the drive-creation response and must not be written to application logs.
 The `hiring_drive_round` table connects a hiring drive to reusable `company_custom_round` records.
 Its unique constraints protect both the round assignment and its order within a drive. A positive
 order check prevents invalid queue positions even when data is written outside the application.
+
+Registration-field requirements are stored on `hiring_drive` because every drive has exactly one
+standard form configuration. Database checks restrict each value to `HIDDEN`, `OPTIONAL`, or
+`REQUIRED`. Existing and new drives default to required identity/contact fields and a hidden resume,
+so applying the migration does not introduce null configuration values.

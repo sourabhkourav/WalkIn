@@ -5,6 +5,7 @@ import com.walkin.entity.CompanyCustomRound;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.InterviewRound;
+import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.entity.Student;
 import com.walkin.entity.StudentApplication;
 import com.walkin.repository.CompanyCustomRoundRepository;
@@ -92,6 +93,9 @@ class PostgreSqlIntegrationTests {
                 "4f2f8d2f79fd789e4c182a45a7300ca522083b652f538c4f16c1c6f65c7d8e21");
         drive.setTokenExpiresAt(drive.getEndsAt());
         hiringDrives.saveAndFlush(drive);
+
+        assertEquals(RegistrationFieldRequirement.REQUIRED, drive.getFirstNameRequirement());
+        assertEquals(RegistrationFieldRequirement.HIDDEN, drive.getResumeRequirement());
 
         HiringDriveRound driveRound = new HiringDriveRound();
         driveRound.setHiringDrive(drive);

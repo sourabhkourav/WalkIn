@@ -1,9 +1,11 @@
 package com.walkin.service.impl;
 
 import com.walkin.dto.HiringDriveRequest;
+import com.walkin.dto.HiringDriveRegistrationFormRequest;
 import com.walkin.entity.Company;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveStatus;
+import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.exception.ResourceConflictException;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CompanyRepository;
@@ -109,6 +111,26 @@ public class HiringDriveServiceImpl implements HiringDriveService {
     }
 
     @Override
+    @Transactional
+    public HiringDrive updateRegistrationForm(
+            Integer driveId,
+            HiringDriveRegistrationFormRequest request) {
+        HiringDrive drive = getDriveById(driveId);
+        if (drive.getStatus() != HiringDriveStatus.DRAFT) {
+            throw new ResourceConflictException(
+                    "Registration fields can be changed only while the hiring drive is DRAFT");
+        }
+        validateRegistrationForm(request);
+
+        drive.setFirstNameRequirement(request.firstName());
+        drive.setLastNameRequirement(request.lastName());
+        drive.setEmailRequirement(request.email());
+        drive.setContactNumberRequirement(request.contactNumber());
+        drive.setResumeRequirement(request.resume());
+        return driveRepository.save(drive);
+    }
+
+    @Override
     public HiringDrive getOpenDriveByRegistrationToken(String registrationToken) {
         if (registrationToken == null || registrationToken.isBlank()) {
             throw unavailableDrive();
@@ -130,6 +152,17 @@ public class HiringDriveServiceImpl implements HiringDriveService {
         }
         if (!endsAt.isAfter(now())) {
             throw new IllegalArgumentException("endsAt must be in the future");
+        }
+    }
+
+    private void validateRegistrationForm(HiringDriveRegistrationFormRequest request) {
+        if (request.firstName() == RegistrationFieldRequirement.HIDDEN) {
+            throw new IllegalArgumentException("firstName cannot be hidden");
+        }
+        if (request.email() == RegistrationFieldRequirement.HIDDEN
+                && request.contactNumber() == RegistrationFieldRequirement.HIDDEN) {
+            throw new IllegalArgumentException(
+                    "At least one of email or contactNumber must be visible");
         }
     }
 

@@ -1,8 +1,10 @@
 package com.walkin.controller;
 
+import com.walkin.dto.HiringDriveRegistrationFormRequest;
 import com.walkin.entity.Company;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveStatus;
+import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.service.HiringDriveCreation;
 import com.walkin.service.HiringDriveService;
@@ -23,12 +25,14 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -156,6 +160,8 @@ class HiringDriveControllerTests {
                 .andExpect(jsonPath("$.companyName").value("Acme"))
                 .andExpect(jsonPath("$.driveName").value("Engineering Drive"))
                 .andExpect(jsonPath("$.venue").value("Convention Centre"))
+                .andExpect(jsonPath("$.registrationForm.firstName").value("REQUIRED"))
+                .andExpect(jsonPath("$.registrationForm.resume").value("HIDDEN"))
                 .andExpect(jsonPath("$.driveId").doesNotExist())
                 .andExpect(jsonPath("$.companyId").doesNotExist())
                 .andExpect(jsonPath("$.registrationToken").doesNotExist())
@@ -180,6 +186,72 @@ class HiringDriveControllerTests {
                 .andExpect(jsonPath("$.message").value("size must be between 1 and 100"));
     }
 
+    @Test
+    void recruiterCanReadRegistrationForm() throws Exception {
+        HiringDrive drive = drive(HiringDriveStatus.DRAFT);
+        when(driveService.getDriveById(10)).thenReturn(drive);
+
+        mockMvc.perform(get("/api/hiring-drives/10/registration-form")
+                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("REQUIRED"))
+                .andExpect(jsonPath("$.contactNumber").value("REQUIRED"))
+                .andExpect(jsonPath("$.resume").value("HIDDEN"));
+    }
+
+    @Test
+    void recruiterCannotUpdateRegistrationForm() throws Exception {
+        mockMvc.perform(put("/api/hiring-drives/10/registration-form")
+                        .with(jwt().authorities(() -> "ROLE_RECRUITER"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registrationFormRequest()))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void administratorUpdatesRegistrationForm() throws Exception {
+        HiringDrive drive = drive(HiringDriveStatus.DRAFT);
+        HiringDriveRegistrationFormRequest request = new HiringDriveRegistrationFormRequest(
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.OPTIONAL,
+                RegistrationFieldRequirement.REQUIRED,
+                RegistrationFieldRequirement.HIDDEN,
+                RegistrationFieldRequirement.OPTIONAL);
+        when(drive.getLastNameRequirement())
+                .thenReturn(RegistrationFieldRequirement.OPTIONAL);
+        when(drive.getContactNumberRequirement())
+                .thenReturn(RegistrationFieldRequirement.HIDDEN);
+        when(drive.getResumeRequirement())
+                .thenReturn(RegistrationFieldRequirement.OPTIONAL);
+        when(driveService.updateRegistrationForm(10, request)).thenReturn(drive);
+
+        mockMvc.perform(put("/api/hiring-drives/10/registration-form")
+                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(registrationFormRequest()))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.firstName").value("REQUIRED"))
+                .andExpect(jsonPath("$.lastName").value("OPTIONAL"))
+                .andExpect(jsonPath("$.contactNumber").value("HIDDEN"))
+                .andExpect(jsonPath("$.resume").value("OPTIONAL"));
+
+        verify(driveService).updateRegistrationForm(10, request);
+    }
+
+    @Test
+    void registrationFormRequiresEveryFieldPolicy() throws Exception {
+        mockMvc.perform(put("/api/hiring-drives/10/registration-form")
+                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.fieldErrors.firstName").exists())
+                .andExpect(jsonPath("$.fieldErrors.lastName").exists())
+                .andExpect(jsonPath("$.fieldErrors.email").exists())
+                .andExpect(jsonPath("$.fieldErrors.contactNumber").exists())
+                .andExpect(jsonPath("$.fieldErrors.resume").exists());
+    }
+
     private HiringDrive drive(HiringDriveStatus status) {
         HiringDrive drive = org.mockito.Mockito.mock(HiringDrive.class);
         Company company = org.mockito.Mockito.mock(Company.class);
@@ -193,6 +265,16 @@ class HiringDriveControllerTests {
         when(drive.getEndsAt()).thenReturn(OffsetDateTime.parse("2099-01-01T17:00:00Z"));
         when(drive.getStatus()).thenReturn(status);
         when(drive.getTokenExpiresAt()).thenReturn(OffsetDateTime.parse("2099-01-01T17:00:00Z"));
+        when(drive.getFirstNameRequirement())
+                .thenReturn(RegistrationFieldRequirement.REQUIRED);
+        when(drive.getLastNameRequirement())
+                .thenReturn(RegistrationFieldRequirement.REQUIRED);
+        when(drive.getEmailRequirement())
+                .thenReturn(RegistrationFieldRequirement.REQUIRED);
+        when(drive.getContactNumberRequirement())
+                .thenReturn(RegistrationFieldRequirement.REQUIRED);
+        when(drive.getResumeRequirement())
+                .thenReturn(RegistrationFieldRequirement.HIDDEN);
         return drive;
     }
 
@@ -204,6 +286,18 @@ class HiringDriveControllerTests {
                   "venue": "Convention Centre",
                   "startsAt": "2099-01-01T09:00:00Z",
                   "endsAt": "2099-01-01T17:00:00Z"
+                }
+                """;
+    }
+
+    private String registrationFormRequest() {
+        return """
+                {
+                  "firstName": "REQUIRED",
+                  "lastName": "OPTIONAL",
+                  "email": "REQUIRED",
+                  "contactNumber": "HIDDEN",
+                  "resume": "OPTIONAL"
                 }
                 """;
     }

@@ -3,6 +3,8 @@ package com.walkin.controller;
 import com.walkin.config.PageRequestFactory;
 import com.walkin.dto.CreatedHiringDriveResponse;
 import com.walkin.dto.HiringDriveRequest;
+import com.walkin.dto.HiringDriveRegistrationFormRequest;
+import com.walkin.dto.HiringDriveRegistrationFormResponse;
 import com.walkin.dto.HiringDriveResponse;
 import com.walkin.dto.HiringDriveStatusRequest;
 import com.walkin.dto.PageResponse;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -71,5 +74,20 @@ public class HiringDriveController {
             @Valid @RequestBody HiringDriveStatusRequest request) {
         return ResponseEntity.ok(HiringDriveResponse.from(
                 driveService.updateStatus(id, request.status())));
+    }
+
+    @GetMapping("/{id}/registration-form")
+    public ResponseEntity<HiringDriveRegistrationFormResponse> getRegistrationForm(
+            @PathVariable Integer id) {
+        return ResponseEntity.ok(HiringDriveRegistrationFormResponse.from(
+                driveService.getDriveById(id)));
+    }
+
+    @PutMapping("/{id}/registration-form")
+    public ResponseEntity<HiringDriveRegistrationFormResponse> updateRegistrationForm(
+            @PathVariable Integer id,
+            @Valid @RequestBody HiringDriveRegistrationFormRequest request) {
+        return ResponseEntity.ok(HiringDriveRegistrationFormResponse.from(
+                driveService.updateRegistrationForm(id, request)));
     }
 }

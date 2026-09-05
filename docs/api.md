@@ -94,3 +94,29 @@ same position or company round cannot be used twice in one drive. A round must b
 company as the drive. Assignments are allowed while the drive is `DRAFT` or `OPEN`, supporting
 rounds added at the venue while hiring is underway. Administrators and recruiters can retrieve the
 ordered plan with `GET /api/hiring-drives/{driveId}/rounds`.
+
+## Registration forms
+
+Administrators configure the standard fields requested by a drive with
+`PUT /api/hiring-drives/{id}/registration-form`. Each field accepts `HIDDEN`, `OPTIONAL`, or
+`REQUIRED`:
+
+```json
+{
+  "firstName": "REQUIRED",
+  "lastName": "OPTIONAL",
+  "email": "REQUIRED",
+  "contactNumber": "HIDDEN",
+  "resume": "OPTIONAL"
+}
+```
+
+The configuration can change only while the drive is `DRAFT`, preventing candidates from seeing
+different forms after registration opens. First name must remain visible, and at least one of email
+or contact number must be visible. Recruiters can read the configuration but cannot modify it.
+
+The public hiring-drive response includes the same configuration under `registrationForm`, allowing
+the candidate UI to render the appropriate fields after a QR link is opened. Notification channel
+and advance-notice choices remain a separate candidate-controlled step and are not part of the
+company's field configuration. Arbitrary custom questions and public submission are not supported
+yet.

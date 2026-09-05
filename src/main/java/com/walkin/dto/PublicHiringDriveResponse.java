@@ -9,7 +9,8 @@ public record PublicHiringDriveResponse(
         String driveName,
         String venue,
         OffsetDateTime startsAt,
-        OffsetDateTime endsAt) {
+        OffsetDateTime endsAt,
+        HiringDriveRegistrationFormResponse registrationForm) {
 
     public static PublicHiringDriveResponse from(HiringDrive drive) {
         return new PublicHiringDriveResponse(
@@ -17,6 +18,7 @@ public record PublicHiringDriveResponse(
                 drive.getDriveName(),
                 drive.getVenue(),
                 drive.getStartsAt(),
-                drive.getEndsAt());
+                drive.getEndsAt(),
+                HiringDriveRegistrationFormResponse.from(drive));
     }
 }
