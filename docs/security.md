@@ -14,6 +14,7 @@ and recruitment decisions.
 - Public health responses without component details
 - Request validation and database constraints
 - One-time public registration tokens stored as SHA-256 hashes rather than reusable raw values
+- Minimal public drive responses that omit internal IDs, contact details, and token metadata
 
 ## Secret management
 

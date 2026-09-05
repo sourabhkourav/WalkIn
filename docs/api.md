@@ -33,6 +33,7 @@ Do not paste real tokens into documentation, issues, screenshots, or chat messag
 | Student applications | `/api/applications` |
 | Student round decisions | `/api/round-selections` |
 | Candidate reporting schedules | `/api/candidate-round-schedules` |
+| Hiring drives | `/api/hiring-drives` |
 | Application users | `/api/users` |
 
 General resources support create, get, list, update, and delete operations. Student, company, and
@@ -72,3 +73,16 @@ are returned, ordered by reporting time, with a maximum batch size of 100.
 The response contains IDs, timing, and the selected channel, but excludes email addresses, phone
 numbers, resumes, and other candidate details. This endpoint detects due work only: it does not send
 a message or change the schedule to `NOTIFIED`.
+
+## Hiring drives
+
+Administrators create drives with `POST /api/hiring-drives` and receive the public registration
+token once in the creation response. Later authenticated reads never return the token or its stored
+hash. Administrators change lifecycle state with `PATCH /api/hiring-drives/{id}/status`; recruiters
+have read-only access.
+
+An unauthenticated candidate client can resolve an open, unexpired drive with
+`GET /api/public/hiring-drives/{registrationToken}`. The public response contains only the company
+name, drive name, venue, and operating times. It excludes internal IDs, company contact details,
+token metadata, and all candidate information. Candidate registration submission is not available
+yet.
