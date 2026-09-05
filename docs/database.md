@@ -34,3 +34,7 @@ encrypted backups, restricted database access, a retention policy, and regularly
 Hiring drives store only a SHA-256 hash of their public registration token. Database exports and
 backups therefore do not directly contain a usable public registration link. The raw token is shown
 only in the drive-creation response and must not be written to application logs.
+
+The `hiring_drive_round` table connects a hiring drive to reusable `company_custom_round` records.
+Its unique constraints protect both the round assignment and its order within a drive. A positive
+order check prevents invalid queue positions even when data is written outside the application.

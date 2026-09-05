@@ -34,6 +34,7 @@ Do not paste real tokens into documentation, issues, screenshots, or chat messag
 | Student round decisions | `/api/round-selections` |
 | Candidate reporting schedules | `/api/candidate-round-schedules` |
 | Hiring drives | `/api/hiring-drives` |
+| Ordered rounds in a hiring drive | `/api/hiring-drives/{driveId}/rounds` |
 | Application users | `/api/users` |
 
 General resources support create, get, list, update, and delete operations. Student, company, and
@@ -86,3 +87,10 @@ An unauthenticated candidate client can resolve an open, unexpired drive with
 name, drive name, venue, and operating times. It excludes internal IDs, company contact details,
 token metadata, and all candidate information. Candidate registration submission is not available
 yet.
+
+Administrators assign a reusable company round to a drive with
+`POST /api/hiring-drives/{driveId}/rounds`. Each assignment has a positive `roundOrder`, and the
+same position or company round cannot be used twice in one drive. A round must belong to the same
+company as the drive. Assignments are allowed while the drive is `DRAFT` or `OPEN`, supporting
+rounds added at the venue while hiring is underway. Administrators and recruiters can retrieve the
+ordered plan with `GET /api/hiring-drives/{driveId}/rounds`.

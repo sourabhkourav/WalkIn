@@ -52,3 +52,9 @@ The raw registration token is returned only when a drive is created. The databas
 SHA-256 hash, following the same principle used for password-reset and API-key lookup systems. QR
 codes will eventually contain a registration URL carrying the raw token, never company or candidate
 data directly.
+
+A company-round definition is reusable across multiple drives. `HiringDriveRound` is the explicit
+assignment between a drive and one of its company's rounds, and stores that round's position in the
+drive. This keeps the reusable round definition separate from the event-specific order. Database
+constraints prevent a round or order position from being assigned twice within one drive, while the
+service layer also enforces company ownership and drive lifecycle rules.
