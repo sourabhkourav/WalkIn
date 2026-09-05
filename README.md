@@ -1,7 +1,11 @@
 # WalkIn
 
-WalkIn is a Spring Boot REST API for managing recruitment walk-in drives. It tracks students,
-companies, interview rounds, applications, and round-by-round selection decisions.
+WalkIn is a full-stack venue operations platform for offline hiring drives. It helps staff register
+candidates, manage interview rounds, assign reporting times, and record each candidate's preferred
+notification channel and advance-notice period.
+
+The goal is to let candidates leave the waiting area when their interview is not immediate, then
+notify them early enough to return and report at their assigned time.
 
 ## Technology
 
