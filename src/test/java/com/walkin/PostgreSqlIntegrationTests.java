@@ -7,12 +7,14 @@ import com.walkin.entity.CandidateRegistrationStatus;
 import com.walkin.entity.CandidateRoundProgress;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveRound;
+import com.walkin.entity.HiringDriveStatus;
 import com.walkin.entity.InterviewRound;
 import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
 import com.walkin.entity.RoundProgressStatus;
 import com.walkin.entity.Student;
 import com.walkin.entity.StudentApplication;
+import com.walkin.dto.CandidateRegistrationRequest;
 import com.walkin.repository.CompanyCustomRoundRepository;
 import com.walkin.repository.CompanyRepository;
 import com.walkin.repository.CandidateRegistrationRepository;
@@ -22,6 +24,8 @@ import com.walkin.repository.HiringDriveRoundRepository;
 import com.walkin.repository.InterviewRoundRepository;
 import com.walkin.repository.StudentApplicationRepository;
 import com.walkin.repository.StudentRepository;
+import com.walkin.security.RegistrationTokenService;
+import com.walkin.service.CandidateRegistrationService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,7 +36,6 @@ import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
 import java.time.OffsetDateTime;
-import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -61,6 +64,8 @@ class PostgreSqlIntegrationTests {
     @Autowired HiringDriveRoundRepository hiringDriveRounds;
     @Autowired CandidateRegistrationRepository candidateRegistrations;
     @Autowired CandidateRoundProgressRepository candidateRoundProgresses;
+    @Autowired CandidateRegistrationService candidateRegistrationService;
+    @Autowired RegistrationTokenService registrationTokenService;
 
     @Test
     void flywaySchemaPersistsRelationshipsAndEnforcesUniqueApplication() {
@@ -99,9 +104,10 @@ class PostgreSqlIntegrationTests {
         drive.setVenue("Integration Venue");
         drive.setStartsAt(OffsetDateTime.parse("2099-01-01T09:00:00Z"));
         drive.setEndsAt(OffsetDateTime.parse("2099-01-01T17:00:00Z"));
-        drive.setRegistrationTokenHash(
-                "4f2f8d2f79fd789e4c182a45a7300ca522083b652f538c4f16c1c6f65c7d8e21");
+        String rawRegistrationToken = "integration-registration-token";
+        drive.setRegistrationTokenHash(registrationTokenService.hashToken(rawRegistrationToken));
         drive.setTokenExpiresAt(drive.getEndsAt());
+        drive.setStatus(HiringDriveStatus.OPEN);
         hiringDrives.saveAndFlush(drive);
 
         assertEquals(RegistrationFieldRequirement.REQUIRED, drive.getFirstNameRequirement());
@@ -122,19 +128,17 @@ class PostgreSqlIntegrationTests {
                         .getCompanyRound()
                         .getCompanyRoundId());
 
-        CandidateRegistration registration = new CandidateRegistration();
-        registration.setRegistrationReference(
-                UUID.fromString("6593f459-76b0-44b6-bc37-4147b87c8970"));
-        registration.setHiringDrive(drive);
-        registration.setFirstName("Asha");
-        registration.setEmail("candidate.drive.integration@example.com");
-        registration.setNotificationChannel(NotificationChannel.EMAIL);
-        registration.setNotificationDestination("alerts.drive.integration@example.com");
-        registration.setAdvanceNoticeMinutes(30);
-        registration.setStatus(CandidateRegistrationStatus.WAITING);
-        registration.setRegisteredAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
-        registration.setStatusChangedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
-        candidateRegistrations.saveAndFlush(registration);
+        CandidateRegistrationRequest registrationRequest = new CandidateRegistrationRequest();
+        registrationRequest.setFirstName("Asha");
+        registrationRequest.setLastName("Sharma");
+        registrationRequest.setEmail("candidate.drive.integration@example.com");
+        registrationRequest.setContactNumber("9876543288");
+        registrationRequest.setNotificationChannel(NotificationChannel.EMAIL);
+        registrationRequest.setNotificationDestination("alerts.drive.integration@example.com");
+        registrationRequest.setAdvanceNoticeMinutes(30);
+        CandidateRegistration registration = candidateRegistrationService.register(
+                rawRegistrationToken,
+                registrationRequest);
 
         assertNotNull(registration.getRegistrationId());
         assertNotNull(registration.getVersion());
@@ -143,18 +147,9 @@ class PostgreSqlIntegrationTests {
                 candidateRegistrations.findById(registration.getRegistrationId())
                         .orElseThrow()
                         .getStatus());
-
-        CandidateRoundProgress progress = new CandidateRoundProgress();
-        progress.setRegistration(registration);
-        progress.setDriveRound(driveRound);
-        progress.setStatus(RoundProgressStatus.WAITING);
-        progress.setQueuedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
-        progress.setStatusChangedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
-        progress.setStatusChangedBy("integration-test");
-        candidateRoundProgresses.saveAndFlush(progress);
-
-        assertNotNull(progress.getProgressId());
-        assertNotNull(progress.getVersion());
+        assertTrue(candidateRoundProgresses
+                .existsByRegistration_RegistrationIdAndDriveRound_DriveRoundId(
+                        registration.getRegistrationId(), driveRound.getDriveRoundId()));
 
         CandidateRoundProgress duplicateProgress = new CandidateRoundProgress();
         duplicateProgress.setRegistration(registration);

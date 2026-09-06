@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
+import java.util.Optional;
 
 public interface HiringDriveRoundRepository extends JpaRepository<HiringDriveRound, Integer> {
 
@@ -16,4 +17,6 @@ public interface HiringDriveRoundRepository extends JpaRepository<HiringDriveRou
 
     @EntityGraph(attributePaths = {"companyRound", "companyRound.interviewRound"})
     List<HiringDriveRound> findByHiringDrive_DriveIdOrderByRoundOrderAsc(Integer driveId);
+
+    Optional<HiringDriveRound> findFirstByHiringDrive_DriveIdOrderByRoundOrderAsc(Integer driveId);
 }

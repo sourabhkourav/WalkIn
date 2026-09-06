@@ -47,25 +47,28 @@ Work through these slices one at a time:
 
 1. **Completed — Per-round progress foundation:** add a drive-registration-to-round progress
    entity, status transition rules, database constraints, repositories, and tests.
-2. **Automatic queue entry:** put a new registration into the first configured round and advance a
-   selected candidate into the next round.
-3. **Batch calling:** call the next configurable FIFO batch for one round with a shared reporting
+2. **Completed — Automatic first-round entry:** put every new registration into the first
+   configured round as `WAITING` in the registration transaction.
+3. **Selected-candidate advancement:** put a candidate selected in one round into the next
+   configured round, or finalize the candidate when there is no next round.
+4. **Batch calling:** call the next configurable FIFO batch for one round with a shared reporting
    time and safe concurrent updates.
-4. **Result declaration:** record selected or rejected results, require decisions after interviews,
+5. **Result declaration:** record selected or rejected results, require decisions after interviews,
    and finalize candidates who pass the last round.
-5. **Notification outbox:** schedule call and result messages using the candidate's chosen channel
+6. **Notification outbox:** schedule call and result messages using the candidate's chosen channel
    and advance-notice value, with simulated delivery states.
-6. **Candidate status page:** provide a private status link, live journey state, notification
+7. **Candidate status page:** provide a private status link, live journey state, notification
    messages, and withdrawal with confirmation.
-7. **Round operations UI:** replace the registration table with independent round tabs or columns,
+8. **Round operations UI:** replace the registration table with independent round tabs or columns,
    batch controls, result actions, counts, and clear responsive layouts.
-8. **Concurrency and recovery:** protect parallel recruiter actions with locking/idempotency and add
+9. **Concurrency and recovery:** protect parallel recruiter actions with locking/idempotency and add
    missed-candidate, restore, and correction workflows.
-9. **End-to-end verification:** cover concurrent rounds, cross-company isolation, batch boundaries,
+10. **End-to-end verification:** cover concurrent rounds, cross-company isolation, batch boundaries,
    final selection, withdrawal, and notification scheduling with PostgreSQL integration tests.
 
 ## Immediate next slice
 
-Implement item 2 only. After a public registration is stored, find the drive's first configured
-round and create its `WAITING` progress record in the same transaction. This connects candidate
-registration to the new round model without introducing batch calling or UI changes yet.
+Implement item 3 only. When a recruiter selects a candidate after `AWAITING_RESULT`, locate the next
+configured round and create its `WAITING` progress entry. If the selected round is the final round,
+mark the registration as finally selected instead. Keep notification delivery and UI work outside
+this slice.

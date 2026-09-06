@@ -3,12 +3,17 @@ package com.walkin.service.impl;
 import com.walkin.dto.CandidateRegistrationRequest;
 import com.walkin.entity.CandidateRegistration;
 import com.walkin.entity.CandidateRegistrationStatus;
+import com.walkin.entity.CandidateRoundProgress;
 import com.walkin.entity.HiringDrive;
+import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
+import com.walkin.entity.RoundProgressStatus;
 import com.walkin.exception.ResourceConflictException;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CandidateRegistrationRepository;
+import com.walkin.repository.CandidateRoundProgressRepository;
+import com.walkin.repository.HiringDriveRoundRepository;
 import com.walkin.service.CandidateRegistrationService;
 import com.walkin.service.HiringDriveService;
 import com.walkin.service.ResumeUploadValidator;
@@ -36,6 +41,7 @@ import java.util.regex.Pattern;
 public class CandidateRegistrationServiceImpl implements CandidateRegistrationService {
 
     private static final int MAX_SEARCH_LENGTH = 100;
+    private static final String REGISTRATION_ACTOR = "system:registration";
     private static final Map<CandidateRegistrationStatus, Set<CandidateRegistrationStatus>>
             ALLOWED_TRANSITIONS = Map.of(
                     CandidateRegistrationStatus.WAITING,
@@ -54,16 +60,22 @@ public class CandidateRegistrationServiceImpl implements CandidateRegistrationSe
     private static final Pattern PHONE_PATTERN = Pattern.compile("^\\+?[0-9]{10,15}$");
 
     private final CandidateRegistrationRepository registrationRepository;
+    private final CandidateRoundProgressRepository progressRepository;
+    private final HiringDriveRoundRepository driveRoundRepository;
     private final HiringDriveService driveService;
     private final ResumeUploadValidator resumeValidator;
     private final Clock clock;
 
     public CandidateRegistrationServiceImpl(
             CandidateRegistrationRepository registrationRepository,
+            CandidateRoundProgressRepository progressRepository,
+            HiringDriveRoundRepository driveRoundRepository,
             HiringDriveService driveService,
             ResumeUploadValidator resumeValidator,
             Clock clock) {
         this.registrationRepository = registrationRepository;
+        this.progressRepository = progressRepository;
+        this.driveRoundRepository = driveRoundRepository;
         this.driveService = driveService;
         this.resumeValidator = resumeValidator;
         this.clock = clock;
@@ -93,6 +105,10 @@ public class CandidateRegistrationServiceImpl implements CandidateRegistrationSe
                 request.getNotificationChannel(), request.getNotificationDestination());
         byte[] resume = resumeValidator.validate(
                 request.getResume(), drive.getResumeRequirement());
+        HiringDriveRound firstRound = driveRoundRepository
+                .findFirstByHiringDrive_DriveIdOrderByRoundOrderAsc(drive.getDriveId())
+                .orElseThrow(() -> new ResourceConflictException(
+                        "Hiring drive has no configured interview rounds"));
 
         CandidateRegistration registration = new CandidateRegistration();
         registration.setRegistrationReference(UUID.randomUUID());
@@ -109,7 +125,17 @@ public class CandidateRegistrationServiceImpl implements CandidateRegistrationSe
         OffsetDateTime registeredAt = now();
         registration.setRegisteredAt(registeredAt);
         registration.setStatusChangedAt(registeredAt);
-        return registrationRepository.save(registration);
+        CandidateRegistration savedRegistration = registrationRepository.save(registration);
+
+        CandidateRoundProgress progress = new CandidateRoundProgress();
+        progress.setRegistration(savedRegistration);
+        progress.setDriveRound(firstRound);
+        progress.setStatus(RoundProgressStatus.WAITING);
+        progress.setQueuedAt(registeredAt);
+        progress.setStatusChangedAt(registeredAt);
+        progress.setStatusChangedBy(REGISTRATION_ACTOR);
+        progressRepository.save(progress);
+        return savedRegistration;
     }
 
     @Override

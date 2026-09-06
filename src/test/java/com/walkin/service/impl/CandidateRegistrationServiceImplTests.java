@@ -3,12 +3,17 @@ package com.walkin.service.impl;
 import com.walkin.dto.CandidateRegistrationRequest;
 import com.walkin.entity.CandidateRegistration;
 import com.walkin.entity.CandidateRegistrationStatus;
+import com.walkin.entity.CandidateRoundProgress;
 import com.walkin.entity.HiringDrive;
+import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
+import com.walkin.entity.RoundProgressStatus;
 import com.walkin.exception.ResourceConflictException;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.repository.CandidateRegistrationRepository;
+import com.walkin.repository.CandidateRoundProgressRepository;
+import com.walkin.repository.HiringDriveRoundRepository;
 import com.walkin.service.HiringDriveService;
 import com.walkin.service.ResumeUploadValidator;
 import org.junit.jupiter.api.BeforeEach;
@@ -46,6 +51,12 @@ class CandidateRegistrationServiceImplTests {
     private CandidateRegistrationRepository registrationRepository;
 
     @Mock
+    private CandidateRoundProgressRepository progressRepository;
+
+    @Mock
+    private HiringDriveRoundRepository driveRoundRepository;
+
+    @Mock
     private HiringDriveService driveService;
 
     @Mock
@@ -60,6 +71,8 @@ class CandidateRegistrationServiceImplTests {
         drive = new HiringDrive();
         registrationService = new CandidateRegistrationServiceImpl(
                 registrationRepository,
+                progressRepository,
+                driveRoundRepository,
                 driveService,
                 resumeValidator,
                 Clock.fixed(NOW, ZoneOffset.UTC));
@@ -76,6 +89,10 @@ class CandidateRegistrationServiceImplTests {
                 .thenReturn("stored-pdf".getBytes());
         when(registrationRepository.save(any(CandidateRegistration.class)))
                 .thenAnswer(invocation -> invocation.getArgument(0));
+        HiringDriveRound firstRound = new HiringDriveRound();
+        firstRound.setHiringDrive(drive);
+        when(driveRoundRepository.findFirstByHiringDrive_DriveIdOrderByRoundOrderAsc(
+                drive.getDriveId())).thenReturn(Optional.of(firstRound));
 
         CandidateRegistration registration = registrationService.register("drive-token", request);
 
@@ -94,6 +111,30 @@ class CandidateRegistrationServiceImplTests {
         assertThat(registration.getStatusChangedAt().toInstant()).isEqualTo(NOW);
         assertThat(registration.getStatusChangedBy()).isNull();
         assertThat(registration.getResume()).isEqualTo("stored-pdf".getBytes());
+
+        var progressCaptor = org.mockito.ArgumentCaptor.forClass(CandidateRoundProgress.class);
+        verify(progressRepository).save(progressCaptor.capture());
+        CandidateRoundProgress progress = progressCaptor.getValue();
+        assertThat(progress.getRegistration()).isSameAs(registration);
+        assertThat(progress.getDriveRound()).isSameAs(firstRound);
+        assertThat(progress.getStatus()).isEqualTo(RoundProgressStatus.WAITING);
+        assertThat(progress.getQueuedAt().toInstant()).isEqualTo(NOW);
+        assertThat(progress.getStatusChangedBy()).isEqualTo("system:registration");
+    }
+
+    @Test
+    void rejectsRegistrationWhenDriveHasNoConfiguredRounds() {
+        CandidateRegistrationRequest request = validRequest();
+        stubDriveConfiguration(RegistrationFieldRequirement.HIDDEN);
+        when(driveRoundRepository.findFirstByHiringDrive_DriveIdOrderByRoundOrderAsc(
+                drive.getDriveId())).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> registrationService.register("drive-token", request))
+                .isInstanceOf(ResourceConflictException.class)
+                .hasMessage("Hiring drive has no configured interview rounds");
+
+        verify(registrationRepository, never()).save(any());
+        verifyNoInteractions(progressRepository);
     }
 
     @Test
