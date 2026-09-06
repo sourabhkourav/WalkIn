@@ -4,16 +4,19 @@ import com.walkin.entity.Company;
 import com.walkin.entity.CompanyCustomRound;
 import com.walkin.entity.CandidateRegistration;
 import com.walkin.entity.CandidateRegistrationStatus;
+import com.walkin.entity.CandidateRoundProgress;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.InterviewRound;
 import com.walkin.entity.NotificationChannel;
 import com.walkin.entity.RegistrationFieldRequirement;
+import com.walkin.entity.RoundProgressStatus;
 import com.walkin.entity.Student;
 import com.walkin.entity.StudentApplication;
 import com.walkin.repository.CompanyCustomRoundRepository;
 import com.walkin.repository.CompanyRepository;
 import com.walkin.repository.CandidateRegistrationRepository;
+import com.walkin.repository.CandidateRoundProgressRepository;
 import com.walkin.repository.HiringDriveRepository;
 import com.walkin.repository.HiringDriveRoundRepository;
 import com.walkin.repository.InterviewRoundRepository;
@@ -57,6 +60,7 @@ class PostgreSqlIntegrationTests {
     @Autowired HiringDriveRepository hiringDrives;
     @Autowired HiringDriveRoundRepository hiringDriveRounds;
     @Autowired CandidateRegistrationRepository candidateRegistrations;
+    @Autowired CandidateRoundProgressRepository candidateRoundProgresses;
 
     @Test
     void flywaySchemaPersistsRelationshipsAndEnforcesUniqueApplication() {
@@ -139,5 +143,28 @@ class PostgreSqlIntegrationTests {
                 candidateRegistrations.findById(registration.getRegistrationId())
                         .orElseThrow()
                         .getStatus());
+
+        CandidateRoundProgress progress = new CandidateRoundProgress();
+        progress.setRegistration(registration);
+        progress.setDriveRound(driveRound);
+        progress.setStatus(RoundProgressStatus.WAITING);
+        progress.setQueuedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
+        progress.setStatusChangedAt(OffsetDateTime.parse("2099-01-01T08:00:00Z"));
+        progress.setStatusChangedBy("integration-test");
+        candidateRoundProgresses.saveAndFlush(progress);
+
+        assertNotNull(progress.getProgressId());
+        assertNotNull(progress.getVersion());
+
+        CandidateRoundProgress duplicateProgress = new CandidateRoundProgress();
+        duplicateProgress.setRegistration(registration);
+        duplicateProgress.setDriveRound(driveRound);
+        duplicateProgress.setStatus(RoundProgressStatus.WAITING);
+        duplicateProgress.setQueuedAt(OffsetDateTime.parse("2099-01-01T08:01:00Z"));
+        duplicateProgress.setStatusChangedAt(OffsetDateTime.parse("2099-01-01T08:01:00Z"));
+        duplicateProgress.setStatusChangedBy("integration-test");
+        assertThrows(
+                RuntimeException.class,
+                () -> candidateRoundProgresses.saveAndFlush(duplicateProgress));
     }
 }

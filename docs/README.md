@@ -12,7 +12,8 @@ repository's main [README](../README.md) remains focused on the WalkIn product a
 - [Testing](testing.md) covers backend, frontend, and container-based tests.
 - [Security](security.md) documents safe configuration and disclosure practices.
 - [Operations](operations.md) covers health checks, metrics, logs, and deployment responsibilities.
+- [Product workflow](product-workflow.md) records the agreed candidate journey and the ordered
+  implementation plan.
 
 Keep documentation free of real credentials, access tokens, private infrastructure addresses, and
 candidate personal data. Use clearly marked placeholders in every example.
-

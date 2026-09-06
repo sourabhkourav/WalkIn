@@ -53,3 +53,8 @@ statuses even when records are written outside the API.
 V10 adds queue audit fields (`status_changed_at`, `status_changed_by`) and an optimistic-lock
 `version`. Existing rows use their registration time as the initial status-change time. JPA manages
 the version so concurrent venue updates cannot silently overwrite one another.
+
+V12 adds `candidate_round_progress`, which stores one registration's independent state in one
+configured drive round. Its unique constraint prevents duplicate queue entries, check constraints
+require call and result audit fields when applicable, and its version column protects concurrent
+recruiter updates with optimistic locking.
