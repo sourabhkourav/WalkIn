@@ -6,7 +6,9 @@ and recruitment decisions.
 ## Current controls
 
 - Stateless JWT authentication with a configured issuer and short token lifetime
-- Role-based authorization for administrators and recruiters
+- Three-level role authorization for platform administrators, company administrators, and recruiters
+- Company ownership embedded in signed JWTs and checked against every company resource
+- Tenant-filtered collection queries and `403 Forbidden` responses for cross-company access
 - BCrypt-compatible delegated password hashing
 - Environment-based database, bootstrap-user, and signing-key configuration
 - No stack traces or internal exception messages in API responses
@@ -18,6 +20,19 @@ and recruitment decisions.
 - Public registration acknowledgements that never echo candidate details or resume content
 - PDF resume validation with 2 MB file and 3 MB request limits
 - Candidate registration links contain only a drive token and never candidate information
+- Platform administrators remain company-less; company administrators and recruiters must belong
+  to exactly one company
+
+## Tenant boundary
+
+The JWT `companyId` claim is an authorization input, not a frontend preference. Company-scoped
+controllers compare it with the resource owner's company before reading candidate data, resumes,
+drive rounds, or changing queue state. Collection queries are filtered at the repository level so
+other tenants' rows are not loaded and later discarded.
+
+Only `PLATFORM_ADMIN` may manage all companies and application users. `COMPANY_ADMIN` may configure
+its own company and drives. `RECRUITER` may read its company workspace and perform permitted venue
+queue actions. Legacy APIs without a hiring-drive ownership relationship remain platform-only.
 
 ## Secret management
 

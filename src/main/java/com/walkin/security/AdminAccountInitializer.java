@@ -20,7 +20,9 @@ public class AdminAccountInitializer implements ApplicationRunner {
     @Override public void run(ApplicationArguments args) {
         if (users.findByUsernameIgnoreCase(username).isEmpty()) {
             ApplicationUser admin=new ApplicationUser(); admin.setUsername(username.trim());
-            admin.setPasswordHash(encoder.encode(password)); admin.setRole(ApplicationUser.Role.ADMIN); users.save(admin);
+            admin.setPasswordHash(encoder.encode(password));
+            admin.setRole(ApplicationUser.Role.PLATFORM_ADMIN);
+            users.save(admin);
         }
     }
 }

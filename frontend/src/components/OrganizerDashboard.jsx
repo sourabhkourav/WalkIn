@@ -8,6 +8,8 @@ import {
 import { getHiringDrives } from '../api/hiringDriveApi'
 import CandidateQueue from './CandidateQueue'
 import QueueSummary from './QueueSummary'
+import DriveSetupPanel from './DriveSetupPanel'
+import RecruiterPanel from './RecruiterPanel'
 
 const EMPTY_PAGE = {
   content: [],
@@ -26,7 +28,7 @@ const EMPTY_SUMMARY = {
   total: 0,
 }
 
-function OrganizerDashboard({ accessToken, onLogout }) {
+function OrganizerDashboard({ accessToken, identity, onLogout }) {
   const [drives, setDrives] = useState([])
   const [selectedDriveId, setSelectedDriveId] = useState('')
   const [isLoadingDrives, setIsLoadingDrives] = useState(true)
@@ -42,6 +44,8 @@ function OrganizerDashboard({ accessToken, onLogout }) {
   const [queueError, setQueueError] = useState('')
   const [queueMessage, setQueueMessage] = useState('')
   const [busyReference, setBusyReference] = useState(null)
+  const [showSetup, setShowSetup] = useState(false)
+  const canManageDrives = !identity || identity.roles.includes('ROLE_COMPANY_ADMIN')
 
   useEffect(() => {
     let active = true
@@ -206,6 +210,27 @@ function OrganizerDashboard({ accessToken, onLogout }) {
             </select>
           </label>
         </section>
+
+        {canManageDrives && identity?.companyId && (
+          <section className="workspace-actions">
+            <button type="button" onClick={() => setShowSetup((visible) => !visible)}>
+              {showSetup ? 'Close drive setup' : 'Create hiring drive'}
+            </button>
+          </section>
+        )}
+        {showSetup && (
+          <DriveSetupPanel
+            accessToken={accessToken}
+            companyId={identity.companyId}
+            onCreated={(drive) => {
+              setDrives((current) => [drive, ...current])
+              setSelectedDriveId(String(drive.driveId))
+            }}
+          />
+        )}
+        {canManageDrives && identity?.companyId && (
+          <RecruiterPanel accessToken={accessToken} />
+        )}
 
         {driveError && <ErrorNotice message={driveError} />}
         {selectedDrive && (

@@ -2,7 +2,10 @@ package com.walkin.controller;
 
 import com.walkin.entity.CandidateRegistration;
 import com.walkin.entity.CandidateRegistrationStatus;
+import com.walkin.entity.Company;
+import com.walkin.entity.HiringDrive;
 import com.walkin.service.CandidateRegistrationService;
+import com.walkin.service.HiringDriveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +51,9 @@ class CandidateRegistrationControllerTests {
     @MockitoBean
     private CandidateRegistrationService registrationService;
 
+    @MockitoBean
+    private HiringDriveService driveService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -55,6 +61,11 @@ class CandidateRegistrationControllerTests {
         mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext)
                 .apply(springSecurity())
                 .build();
+        HiringDrive drive = org.mockito.Mockito.mock(HiringDrive.class);
+        Company company = org.mockito.Mockito.mock(Company.class);
+        when(drive.getCompany()).thenReturn(company);
+        when(company.getCompanyId()).thenReturn(7);
+        when(driveService.getDriveById(12)).thenReturn(drive);
     }
 
     @Test
@@ -75,7 +86,8 @@ class CandidateRegistrationControllerTests {
         mockMvc.perform(get("/api/hiring-drives/12/registrations")
                         .param("status", "WAITING")
                         .param("query", "Asha")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].registrationReference")
                         .value(REFERENCE.toString()))
@@ -97,7 +109,8 @@ class CandidateRegistrationControllerTests {
 
         mockMvc.perform(patch("/api/hiring-drives/12/registrations/"
                         + REFERENCE + "/status")
-                        .with(jwt().jwt(token -> token.subject("venue.operator"))
+                        .with(jwt().jwt(token -> token.subject("venue.operator")
+                                        .claim("companyId", 7))
                                 .authorities(() -> "ROLE_RECRUITER"))
                         .contentType("application/json")
                         .content("{\"status\":\"CALLED\"}"))
@@ -120,7 +133,8 @@ class CandidateRegistrationControllerTests {
         when(registrationService.getStatusCounts(12)).thenReturn(counts);
 
         mockMvc.perform(get("/api/hiring-drives/12/registrations/summary")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.waiting").value(4))
                 .andExpect(jsonPath("$.called").value(2))
@@ -136,7 +150,8 @@ class CandidateRegistrationControllerTests {
 
         mockMvc.perform(get("/api/hiring-drives/12/registrations/"
                         + REFERENCE + "/resume")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentType("application/pdf"))
                 .andExpect(header().string(HttpHeaders.CONTENT_DISPOSITION,
@@ -152,9 +167,20 @@ class CandidateRegistrationControllerTests {
 
         mockMvc.perform(get("/api/hiring-drives/12/registrations/"
                         + REFERENCE + "/resume")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message").value("Candidate resume not found"));
+    }
+
+    @Test
+    void companyCannotReadAnotherCompanyCandidateQueue() throws Exception {
+        mockMvc.perform(get("/api/hiring-drives/12/registrations")
+                        .with(jwt().jwt(token -> token.claim("companyId", 99))
+                                .authorities(() -> "ROLE_COMPANY_ADMIN")))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message").value(
+                        "You do not have access to this company resource"));
     }
 
     @Test
@@ -166,7 +192,7 @@ class CandidateRegistrationControllerTests {
 
         mockMvc.perform(patch("/api/hiring-drives/12/registrations/"
                         + REFERENCE + "/status")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType("application/json")
                         .content("{\"status\":\"CALLED\"}"))
                 .andExpect(status().isConflict())
@@ -178,7 +204,7 @@ class CandidateRegistrationControllerTests {
     void invalidStatusRequestIsRejected() throws Exception {
         mockMvc.perform(patch("/api/hiring-drives/12/registrations/"
                         + REFERENCE + "/status")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType("application/json")
                         .content("{}"))
                 .andExpect(status().isBadRequest())

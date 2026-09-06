@@ -88,6 +88,11 @@ public class HiringDriveServiceImpl implements HiringDriveService {
     }
 
     @Override
+    public Page<HiringDrive> getDrives(Integer companyId, Pageable pageable) {
+        return driveRepository.findByCompany_CompanyId(companyId, pageable);
+    }
+
+    @Override
     @Transactional
     public HiringDrive updateStatus(Integer driveId, HiringDriveStatus targetStatus) {
         if (targetStatus == null) {

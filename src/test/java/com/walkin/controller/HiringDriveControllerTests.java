@@ -65,11 +65,13 @@ class HiringDriveControllerTests {
     @Test
     void recruiterCanReadDriveWithoutTokenMaterial() throws Exception {
         HiringDrive drive = drive(HiringDriveStatus.DRAFT);
-        when(driveService.getDrives(any(Pageable.class)))
+        when(driveService.getDrives(
+                org.mockito.ArgumentMatchers.eq(1), any(Pageable.class)))
                 .thenReturn(new PageImpl<>(List.of(drive)));
 
         mockMvc.perform(get("/api/hiring-drives")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 1))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[0].driveId").value(10))
                 .andExpect(jsonPath("$.content[0].companyId").value(1))
@@ -94,7 +96,7 @@ class HiringDriveControllerTests {
                 .thenReturn(new HiringDriveCreation(drive, "one-time-registration-token"));
 
         mockMvc.perform(post("/api/hiring-drives")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isCreated())
@@ -109,7 +111,7 @@ class HiringDriveControllerTests {
     @Test
     void invalidDriveRequestIsRejected() throws Exception {
         mockMvc.perform(post("/api/hiring-drives")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -131,10 +133,11 @@ class HiringDriveControllerTests {
     @Test
     void administratorCanOpenDrive() throws Exception {
         HiringDrive drive = drive(HiringDriveStatus.OPEN);
+        when(driveService.getDriveById(10)).thenReturn(drive);
         when(driveService.updateStatus(10, HiringDriveStatus.OPEN)).thenReturn(drive);
 
         mockMvc.perform(patch("/api/hiring-drives/10/status")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"OPEN\"}"))
                 .andExpect(status().isOk())
@@ -181,7 +184,7 @@ class HiringDriveControllerTests {
     @Test
     void invalidPaginationIsRejected() throws Exception {
         mockMvc.perform(get("/api/hiring-drives?size=101")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN")))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("size must be between 1 and 100"));
     }
@@ -192,7 +195,8 @@ class HiringDriveControllerTests {
         when(driveService.getDriveById(10)).thenReturn(drive);
 
         mockMvc.perform(get("/api/hiring-drives/10/registration-form")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 1))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.firstName").value("REQUIRED"))
                 .andExpect(jsonPath("$.contactNumber").value("REQUIRED"))
@@ -223,10 +227,11 @@ class HiringDriveControllerTests {
                 .thenReturn(RegistrationFieldRequirement.HIDDEN);
         when(drive.getResumeRequirement())
                 .thenReturn(RegistrationFieldRequirement.OPTIONAL);
+        when(driveService.getDriveById(10)).thenReturn(drive);
         when(driveService.updateRegistrationForm(10, request)).thenReturn(drive);
 
         mockMvc.perform(put("/api/hiring-drives/10/registration-form")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(registrationFormRequest()))
                 .andExpect(status().isOk())
@@ -241,7 +246,7 @@ class HiringDriveControllerTests {
     @Test
     void registrationFormRequiresEveryFieldPolicy() throws Exception {
         mockMvc.perform(put("/api/hiring-drives/10/registration-form")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{}"))
                 .andExpect(status().isBadRequest())

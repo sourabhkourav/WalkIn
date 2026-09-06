@@ -40,7 +40,7 @@ class StudentControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void invalidStudentIsRejected() throws Exception {
         mockMvc.perform(post("/api/students")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -59,7 +59,7 @@ class StudentControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void missingStudentReturnsNotFound() throws Exception {
         mockMvc.perform(get("/api/students/999999"))
                 .andExpect(status().isNotFound())
@@ -67,7 +67,7 @@ class StudentControllerTests {
     }
 
     @Test
-    @WithMockUser(roles = "ADMIN")
+    @WithMockUser(roles = "PLATFORM_ADMIN")
     void invalidPaginationIsRejected() throws Exception {
         mockMvc.perform(get("/api/students?size=101&sort=studentId"))
                 .andExpect(status().isBadRequest())

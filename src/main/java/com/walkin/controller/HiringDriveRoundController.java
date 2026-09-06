@@ -3,8 +3,11 @@ package com.walkin.controller;
 import com.walkin.dto.HiringDriveRoundRequest;
 import com.walkin.dto.HiringDriveRoundResponse;
 import com.walkin.service.HiringDriveRoundService;
+import com.walkin.service.HiringDriveService;
+import com.walkin.security.CompanyTenantAccess;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,15 +23,24 @@ import java.util.List;
 public class HiringDriveRoundController {
 
     private final HiringDriveRoundService driveRoundService;
+    private final HiringDriveService driveService;
+    private final CompanyTenantAccess tenantAccess;
 
-    public HiringDriveRoundController(HiringDriveRoundService driveRoundService) {
+    public HiringDriveRoundController(
+            HiringDriveRoundService driveRoundService,
+            HiringDriveService driveService,
+            CompanyTenantAccess tenantAccess) {
         this.driveRoundService = driveRoundService;
+        this.driveService = driveService;
+        this.tenantAccess = tenantAccess;
     }
 
     @PostMapping
     public ResponseEntity<HiringDriveRoundResponse> addRound(
             @PathVariable Integer driveId,
-            @Valid @RequestBody HiringDriveRoundRequest request) {
+            @Valid @RequestBody HiringDriveRoundRequest request,
+            Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         HiringDriveRoundResponse response = HiringDriveRoundResponse.from(
                 driveRoundService.addRound(driveId, request));
         return ResponseEntity
@@ -39,10 +51,16 @@ public class HiringDriveRoundController {
 
     @GetMapping
     public ResponseEntity<List<HiringDriveRoundResponse>> getRounds(
-            @PathVariable Integer driveId) {
+            @PathVariable Integer driveId, Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         return ResponseEntity.ok(driveRoundService.getRounds(driveId)
                 .stream()
                 .map(HiringDriveRoundResponse::from)
                 .toList());
+    }
+
+    private void authorizeDrive(Integer driveId, Authentication authentication) {
+        Integer companyId = driveService.getDriveById(driveId).getCompany().getCompanyId();
+        tenantAccess.requireCompanyAccess(authentication, companyId);
     }
 }

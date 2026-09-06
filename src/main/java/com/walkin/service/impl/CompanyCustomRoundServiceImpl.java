@@ -34,6 +34,9 @@ public class CompanyCustomRoundServiceImpl implements CompanyCustomRoundService 
 		return companyCustomRoundRepository.findAll();
 	}
 	@Override public Page<CompanyCustomRound> getCompanyCustomRounds(Pageable pageable) { return companyCustomRoundRepository.findAll(pageable); }
+	@Override public Page<CompanyCustomRound> getCompanyCustomRounds(Integer companyId, Pageable pageable) {
+		return companyCustomRoundRepository.findByCompany_CompanyId(companyId, pageable);
+	}
 	
 	@Override
 	public CompanyCustomRound updateCompanyCustomRound(Integer companyRoundId, CompanyCustomRound updateCompanyCustomRound) {

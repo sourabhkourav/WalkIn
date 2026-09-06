@@ -63,20 +63,10 @@ class CandidateRoundScheduleControllerTests {
     }
 
     @Test
-    void recruiterCanReadSchedulesWithoutCandidateDetails() throws Exception {
-        CandidateRoundSchedule schedule = schedule();
-        when(scheduleService.getSchedules(any(Pageable.class)))
-                .thenReturn(new PageImpl<>(List.of(schedule)));
-
+    void recruiterCannotReadLegacyUnscopedSchedules() throws Exception {
         mockMvc.perform(get("/api/candidate-round-schedules")
                         .with(jwt().authorities(() -> "ROLE_RECRUITER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.content[0].scheduleId").value(10))
-                .andExpect(jsonPath("$.content[0].studentId").value(1))
-                .andExpect(jsonPath("$.content[0].companyRoundId").value(2))
-                .andExpect(jsonPath("$.content[0].status").value("SCHEDULED"))
-                .andExpect(jsonPath("$.content[0].student").doesNotExist())
-                .andExpect(jsonPath("$.content[0].companyRound").doesNotExist());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -94,7 +84,7 @@ class CandidateRoundScheduleControllerTests {
         when(scheduleService.createSchedule(any())).thenReturn(schedule);
 
         mockMvc.perform(post("/api/candidate-round-schedules")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isCreated())
@@ -109,7 +99,7 @@ class CandidateRoundScheduleControllerTests {
     @Test
     void invalidScheduleRequestIsRejectedBeforeServiceCall() throws Exception {
         mockMvc.perform(post("/api/candidate-round-schedules")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {
@@ -131,7 +121,7 @@ class CandidateRoundScheduleControllerTests {
                         "Candidate round schedule not found with ID: 999"));
 
         mockMvc.perform(get("/api/candidate-round-schedules/999")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN")))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN")))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.message")
                         .value("Candidate round schedule not found with ID: 999"));
@@ -140,7 +130,7 @@ class CandidateRoundScheduleControllerTests {
     @Test
     void invalidPaginationIsRejected() throws Exception {
         mockMvc.perform(get("/api/candidate-round-schedules?size=101")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN")))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN")))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("size must be between 1 and 100"));
     }
@@ -151,7 +141,7 @@ class CandidateRoundScheduleControllerTests {
         when(scheduleService.reschedule(eq(10), any(OffsetDateTime.class))).thenReturn(schedule);
 
         mockMvc.perform(put("/api/candidate-round-schedules/10/reporting-time")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reportingTime\":\"2099-01-01T10:00:00Z\"}"))
                 .andExpect(status().isOk())
@@ -161,7 +151,7 @@ class CandidateRoundScheduleControllerTests {
     @Test
     void pastRescheduleRequestIsRejected() throws Exception {
         mockMvc.perform(put("/api/candidate-round-schedules/10/reporting-time")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"reportingTime\":\"2020-01-01T10:00:00Z\"}"))
                 .andExpect(status().isBadRequest())
@@ -174,7 +164,7 @@ class CandidateRoundScheduleControllerTests {
         when(scheduleService.updateStatus(10, ScheduleStatus.NOTIFIED)).thenReturn(schedule);
 
         mockMvc.perform(patch("/api/candidate-round-schedules/10/status")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"status\":\"NOTIFIED\"}"))
                 .andExpect(status().isOk())
@@ -191,20 +181,10 @@ class CandidateRoundScheduleControllerTests {
     }
 
     @Test
-    void recruiterCanViewDueNotificationsWithoutContactDetails() throws Exception {
-        CandidateRoundSchedule schedule = schedule();
-        when(scheduleService.getDueNotificationSchedules()).thenReturn(List.of(schedule));
-
+    void recruiterCannotReadLegacyUnscopedNotifications() throws Exception {
         mockMvc.perform(get("/api/candidate-round-schedules/due")
                         .with(jwt().authorities(() -> "ROLE_RECRUITER")))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].scheduleId").value(10))
-                .andExpect(jsonPath("$[0].studentId").value(1))
-                .andExpect(jsonPath("$[0].notificationChannel").value("EMAIL"))
-                .andExpect(jsonPath("$[0].advanceNoticeMinutes").value(30))
-                .andExpect(jsonPath("$[0].notificationDueAt").value("2099-01-01T09:30:00Z"))
-                .andExpect(jsonPath("$[0].email").doesNotExist())
-                .andExpect(jsonPath("$[0].contactNumber").doesNotExist());
+                .andExpect(status().isForbidden());
     }
 
     private CandidateRoundSchedule schedule() {

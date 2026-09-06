@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "application_user")
 public class ApplicationUser {
-    public enum Role { ADMIN, RECRUITER }
+    public enum Role { PLATFORM_ADMIN, COMPANY_ADMIN, RECRUITER }
 
     @Id @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
@@ -18,6 +18,9 @@ public class ApplicationUser {
     private Role role;
     @Column(nullable = false)
     private boolean enabled = true;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "company_id")
+    private Company company;
 
     public Integer getUserId() { return userId; }
     public String getUsername() { return username; }
@@ -28,4 +31,6 @@ public class ApplicationUser {
     public void setRole(Role role) { this.role = role; }
     public boolean isEnabled() { return enabled; }
     public void setEnabled(boolean enabled) { this.enabled = enabled; }
+    public Company getCompany() { return company; }
+    public void setCompany(Company company) { this.company = company; }
 }

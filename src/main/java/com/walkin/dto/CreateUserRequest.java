@@ -8,5 +8,6 @@ public record CreateUserRequest(
         @Pattern(regexp = "^[A-Za-z0-9._-]+$", message = "may contain only letters, numbers, dot, underscore, and hyphen")
         String username,
         @NotBlank @Size(min = 12, max = 128) String password,
-        @NotNull Role role) {
+        @NotNull Role role,
+        @Positive Integer companyId) {
 }

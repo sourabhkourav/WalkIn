@@ -7,6 +7,8 @@ import com.walkin.dto.PageResponse;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import com.walkin.security.CompanyTenantAccess;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,10 +27,15 @@ public class CompanyController {
 
 	private final CompanyService companyService;
 	private final PageRequestFactory pages;
+	private final CompanyTenantAccess tenantAccess;
 
-	public CompanyController(CompanyService companyService, PageRequestFactory pages) {
+	public CompanyController(
+			CompanyService companyService,
+			PageRequestFactory pages,
+			CompanyTenantAccess tenantAccess) {
 		this.companyService = companyService;
 		this.pages = pages;
+		this.tenantAccess = tenantAccess;
 	}
 
 	@PostMapping
@@ -37,7 +44,9 @@ public class CompanyController {
 	}
 
 	@GetMapping("/{id}")
-	public ResponseEntity<Company> getCompany(@PathVariable Integer id) {
+	public ResponseEntity<Company> getCompany(
+			@PathVariable Integer id, Authentication authentication) {
+		tenantAccess.requireCompanyAccess(authentication, id);
 		return ResponseEntity.ok(companyService.getCompanyById(id));
 	}
 
@@ -52,12 +61,17 @@ public class CompanyController {
 
 	@PutMapping("/{id}")
 	public ResponseEntity<Company> updateCompany(
-			@PathVariable Integer id, @Valid @RequestBody Company company) {
+			@PathVariable Integer id,
+			@Valid @RequestBody Company company,
+			Authentication authentication) {
+		tenantAccess.requireCompanyAccess(authentication, id);
 		return ResponseEntity.ok(companyService.updateCompany(id, company));
 	}
 
 	@DeleteMapping("/{id}")
-	public ResponseEntity<Void> deleteCompany(@PathVariable Integer id) {
+	public ResponseEntity<Void> deleteCompany(
+			@PathVariable Integer id, Authentication authentication) {
+		tenantAccess.requireCompanyAccess(authentication, id);
 		companyService.deleteCompany(id);
 		return ResponseEntity.noContent().build();
 	}

@@ -53,10 +53,11 @@ npm.cmd run dev
 `frontend/.env.example` documents the optional API base URL. Leave it empty when the frontend uses
 the Vite development proxy or shares an origin with the API.
 
-After signing in, the organizer dashboard selects the newest hiring drive returned by the API.
-Create and open a drive, then register a synthetic candidate through its public token to exercise
-queue filtering and status actions. The dashboard intentionally does not display the candidate's
-notification destination.
+After signing in, the displayed workspace depends on the account role. The bootstrap
+`PLATFORM_ADMIN` can create a company and its first `COMPANY_ADMIN`. A company administrator can
+configure and open a drive, select ordered company rounds, and generate its candidate link and QR
+code. Recruiters can operate only that company's venue queue. The dashboard intentionally does not
+display the candidate's notification destination.
 
 To exercise the candidate experience, open `/register/{registrationToken}` on the frontend origin,
 using the one-time raw token returned when the drive was created. In production, the web server must

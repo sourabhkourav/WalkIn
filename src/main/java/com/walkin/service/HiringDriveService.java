@@ -15,6 +15,8 @@ public interface HiringDriveService {
 
     Page<HiringDrive> getDrives(Pageable pageable);
 
+    Page<HiringDrive> getDrives(Integer companyId, Pageable pageable);
+
     HiringDrive updateStatus(Integer driveId, HiringDriveStatus status);
 
     HiringDrive updateRegistrationForm(

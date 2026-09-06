@@ -11,7 +11,11 @@ describe('LoginForm', () => {
   it('stores a successful session and shows the authenticated view', async () => {
     const user = userEvent.setup()
     const session = {
-      accessToken: 'test-token',
+      accessToken: token({
+        sub: 'company-admin',
+        roles: 'ROLE_COMPANY_ADMIN',
+        companyId: 7,
+      }),
       tokenType: 'Bearer',
       expiresAt: new Date(Date.now() + 60_000).toISOString(),
     }
@@ -62,3 +66,7 @@ describe('LoginForm', () => {
     expect(sessionStorage.getItem('walkin.auth')).toBeNull()
   })
 })
+
+function token(payload) {
+  return `header.${btoa(JSON.stringify(payload))}.signature`
+}

@@ -5,6 +5,8 @@ import com.walkin.entity.ApplicationUser;
 import com.walkin.entity.ApplicationUser.Role;
 import com.walkin.exception.ResourceConflictException;
 import com.walkin.repository.ApplicationUserRepository;
+import com.walkin.repository.CompanyRepository;
+import com.walkin.entity.Company;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -18,12 +20,15 @@ import static org.mockito.Mockito.*;
 class UserManagementServiceImplTests {
     @Mock ApplicationUserRepository users;
     @Mock PasswordEncoder encoder;
+    @Mock CompanyRepository companies;
     @InjectMocks UserManagementServiceImpl service;
 
     @Test void createHashesPasswordAndNeverReturnsIt() {
         when(encoder.encode("strong-password")).thenReturn("{bcrypt}hash");
+        when(companies.findById(7)).thenReturn(Optional.of(new Company()));
         when(users.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
-        UserResponse response = service.create(new CreateUserRequest(" Recruiter.One ", "strong-password", Role.RECRUITER));
+        UserResponse response = service.create(new CreateUserRequest(
+                " Recruiter.One ", "strong-password", Role.RECRUITER, 7));
         ArgumentCaptor<ApplicationUser> saved = ArgumentCaptor.forClass(ApplicationUser.class);
         verify(users).save(saved.capture());
         assertEquals("Recruiter.One", response.username());
@@ -33,16 +38,18 @@ class UserManagementServiceImplTests {
     @Test void duplicateUsernameIsRejectedBeforeEncoding() {
         when(users.existsByUsernameIgnoreCase("existing")).thenReturn(true);
         assertThrows(ResourceConflictException.class,
-                () -> service.create(new CreateUserRequest("existing", "strong-password", Role.RECRUITER)));
+                () -> service.create(new CreateUserRequest(
+                        "existing", "strong-password", Role.RECRUITER, 7)));
         verifyNoInteractions(encoder);
     }
 
     @Test void lastEnabledAdminCannotBeDisabled() {
-        ApplicationUser admin = user(Role.ADMIN, true);
+        ApplicationUser admin = user(Role.PLATFORM_ADMIN, true);
         when(users.findById(1)).thenReturn(Optional.of(admin));
-        when(users.countByRoleAndEnabledTrue(Role.ADMIN)).thenReturn(1L);
+        when(users.countByRoleAndEnabledTrue(Role.PLATFORM_ADMIN)).thenReturn(1L);
         assertThrows(ResourceConflictException.class,
-                () -> service.update(1, new UpdateUserRequest(Role.ADMIN, false)));
+                () -> service.update(1, new UpdateUserRequest(
+                        Role.PLATFORM_ADMIN, false, null)));
         verify(users, never()).save(any());
     }
 

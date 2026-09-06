@@ -5,7 +5,9 @@ import com.walkin.entity.CompanyCustomRound;
 import com.walkin.entity.HiringDrive;
 import com.walkin.entity.HiringDriveRound;
 import com.walkin.entity.InterviewRound;
+import com.walkin.entity.Company;
 import com.walkin.service.HiringDriveRoundService;
+import com.walkin.service.HiringDriveService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,6 +41,9 @@ class HiringDriveRoundControllerTests {
     @MockitoBean
     private HiringDriveRoundService driveRoundService;
 
+    @MockitoBean
+    private HiringDriveService driveService;
+
     private MockMvc mockMvc;
 
     @BeforeEach
@@ -46,6 +51,11 @@ class HiringDriveRoundControllerTests {
         mockMvc = MockMvcBuilders.webAppContextSetup(applicationContext)
                 .apply(springSecurity())
                 .build();
+        HiringDrive drive = org.mockito.Mockito.mock(HiringDrive.class);
+        Company company = org.mockito.Mockito.mock(Company.class);
+        when(drive.getCompany()).thenReturn(company);
+        when(company.getCompanyId()).thenReturn(7);
+        when(driveService.getDriveById(10)).thenReturn(drive);
     }
 
     @Test
@@ -60,7 +70,8 @@ class HiringDriveRoundControllerTests {
         when(driveRoundService.getRounds(10)).thenReturn(List.of(driveRound));
 
         mockMvc.perform(get("/api/hiring-drives/10/rounds")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER")))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].driveRoundId").value(30))
                 .andExpect(jsonPath("$[0].driveId").value(10))
@@ -73,7 +84,8 @@ class HiringDriveRoundControllerTests {
     @Test
     void recruiterCannotAddRound() throws Exception {
         mockMvc.perform(post("/api/hiring-drives/10/rounds")
-                        .with(jwt().authorities(() -> "ROLE_RECRUITER"))
+                        .with(jwt().jwt(token -> token.claim("companyId", 7))
+                                .authorities(() -> "ROLE_RECRUITER"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isForbidden());
@@ -87,7 +99,7 @@ class HiringDriveRoundControllerTests {
                 .thenReturn(driveRound);
 
         mockMvc.perform(post("/api/hiring-drives/10/rounds")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(validRequest()))
                 .andExpect(status().isCreated())
@@ -103,7 +115,7 @@ class HiringDriveRoundControllerTests {
     @Test
     void invalidRoundAssignmentIsRejected() throws Exception {
         mockMvc.perform(post("/api/hiring-drives/10/rounds")
-                        .with(jwt().authorities(() -> "ROLE_ADMIN"))
+                        .with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("{\"companyRoundId\":0,\"roundOrder\":0}"))
                 .andExpect(status().isBadRequest())

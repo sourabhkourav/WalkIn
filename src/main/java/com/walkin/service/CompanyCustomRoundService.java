@@ -12,6 +12,7 @@ public interface CompanyCustomRoundService {
 
 	List<CompanyCustomRound> getAllCompanyCustomRounds();
 	Page<CompanyCustomRound> getCompanyCustomRounds(Pageable pageable);
+	Page<CompanyCustomRound> getCompanyCustomRounds(Integer companyId, Pageable pageable);
 	
 	CompanyCustomRound updateCompanyCustomRound(Integer companyRoundId, CompanyCustomRound companyCustomRound);
 	

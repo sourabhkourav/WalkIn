@@ -26,18 +26,18 @@ class UserControllerSecurityTests {
     }
 
     @Test void administratorCanCreateRecruiterWithoutExposingPasswordHash() throws Exception {
-        mockMvc.perform(post("/api/users").with(jwt().authorities(() -> "ROLE_ADMIN"))
+        mockMvc.perform(post("/api/users").with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"api-recruiter\",\"password\":\"strong-password-123\",\"role\":\"RECRUITER\"}"))
+                        .content("{\"username\":\"api-platform-admin\",\"password\":\"strong-password-123\",\"role\":\"PLATFORM_ADMIN\"}"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.username").value("api-recruiter"))
+                .andExpect(jsonPath("$.username").value("api-platform-admin"))
                 .andExpect(jsonPath("$.passwordHash").doesNotExist());
     }
 
     @Test void shortPasswordFailsValidation() throws Exception {
-        mockMvc.perform(post("/api/users").with(jwt().authorities(() -> "ROLE_ADMIN"))
+        mockMvc.perform(post("/api/users").with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN"))
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"another-user\",\"password\":\"short\",\"role\":\"RECRUITER\"}"))
+                        .content("{\"username\":\"another-user\",\"password\":\"short\",\"role\":\"PLATFORM_ADMIN\"}"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.fieldErrors.password").exists());
     }

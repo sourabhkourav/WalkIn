@@ -7,6 +7,7 @@ import java.util.Map;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -44,6 +45,12 @@ public class GlobalExceptionHandler {
     ResponseEntity<ApiError> handleConflict(DataIntegrityViolationException exception) {
         return response(HttpStatus.CONFLICT,
                 "The request conflicts with existing or referenced data", Map.of());
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ResponseEntity<ApiError> handleAccessDenied(AccessDeniedException exception) {
+        return response(HttpStatus.FORBIDDEN,
+                "You do not have access to this company resource", Map.of());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

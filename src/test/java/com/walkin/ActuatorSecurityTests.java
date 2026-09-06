@@ -41,7 +41,7 @@ class ActuatorSecurityTests {
                 .andExpect(status().isUnauthorized());
         mockMvc.perform(get("/actuator/prometheus").with(jwt().authorities(() -> "ROLE_RECRUITER")))
                 .andExpect(status().isForbidden());
-        mockMvc.perform(get("/actuator/prometheus").with(jwt().authorities(() -> "ROLE_ADMIN")))
+        mockMvc.perform(get("/actuator/prometheus").with(jwt().authorities(() -> "ROLE_PLATFORM_ADMIN")))
                 .andExpect(status().isOk())
                 .andExpect(content().contentTypeCompatibleWith("text/plain"));
     }

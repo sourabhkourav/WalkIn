@@ -9,6 +9,8 @@ import com.walkin.entity.CandidateRegistration;
 import com.walkin.entity.CandidateRegistrationStatus;
 import com.walkin.exception.ResourceNotFoundException;
 import com.walkin.service.CandidateRegistrationService;
+import com.walkin.service.HiringDriveService;
+import com.walkin.security.CompanyTenantAccess;
 import jakarta.validation.Valid;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -35,12 +37,18 @@ public class CandidateRegistrationController {
 
     private final CandidateRegistrationService registrationService;
     private final PageRequestFactory pageRequestFactory;
+    private final HiringDriveService driveService;
+    private final CompanyTenantAccess tenantAccess;
 
     public CandidateRegistrationController(
             CandidateRegistrationService registrationService,
-            PageRequestFactory pageRequestFactory) {
+            PageRequestFactory pageRequestFactory,
+            HiringDriveService driveService,
+            CompanyTenantAccess tenantAccess) {
         this.registrationService = registrationService;
         this.pageRequestFactory = pageRequestFactory;
+        this.driveService = driveService;
+        this.tenantAccess = tenantAccess;
     }
 
     @GetMapping
@@ -51,7 +59,9 @@ public class CandidateRegistrationController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(defaultValue = "registeredAt") String sort,
-            @RequestParam(defaultValue = "asc") String direction) {
+            @RequestParam(defaultValue = "asc") String direction,
+            Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         return ResponseEntity.ok(PageResponse.from(registrationService.getRegistrations(
                 driveId,
                 status,
@@ -64,14 +74,17 @@ public class CandidateRegistrationController {
     @GetMapping("/{registrationReference}")
     public ResponseEntity<CandidateRegistrationDetailsResponse> getByReference(
             @PathVariable Integer driveId,
-            @PathVariable UUID registrationReference) {
+            @PathVariable UUID registrationReference,
+            Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         return ResponseEntity.ok(CandidateRegistrationDetailsResponse.from(
                 registrationService.getRegistration(driveId, registrationReference)));
     }
 
     @GetMapping("/summary")
     public ResponseEntity<CandidateQueueSummaryResponse> getSummary(
-            @PathVariable Integer driveId) {
+            @PathVariable Integer driveId, Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         return ResponseEntity.ok(CandidateQueueSummaryResponse.from(
                 registrationService.getStatusCounts(driveId)));
     }
@@ -79,7 +92,9 @@ public class CandidateRegistrationController {
     @GetMapping("/{registrationReference}/resume")
     public ResponseEntity<byte[]> downloadResume(
             @PathVariable Integer driveId,
-            @PathVariable UUID registrationReference) {
+            @PathVariable UUID registrationReference,
+            Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         CandidateRegistration registration =
                 registrationService.getRegistration(driveId, registrationReference);
         if (registration.getResume() == null) {
@@ -99,11 +114,17 @@ public class CandidateRegistrationController {
             @PathVariable UUID registrationReference,
             @Valid @RequestBody CandidateRegistrationStatusRequest request,
             Authentication authentication) {
+        authorizeDrive(driveId, authentication);
         return ResponseEntity.ok(CandidateRegistrationDetailsResponse.from(
                 registrationService.updateStatus(
                         driveId,
                         registrationReference,
                         request.status(),
                         authentication.getName())));
+    }
+
+    private void authorizeDrive(Integer driveId, Authentication authentication) {
+        Integer companyId = driveService.getDriveById(driveId).getCompany().getCompanyId();
+        tenantAccess.requireCompanyAccess(authentication, companyId);
     }
 }

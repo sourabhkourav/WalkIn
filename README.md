@@ -20,11 +20,12 @@ manage the drive from a single system.
 
 ## How it works
 
-1. Staff register a candidate at the venue.
-2. The candidate chooses a preferred notification channel and advance-notice period.
-3. Staff manage applications, interview rounds, and reporting schedules.
-4. The candidate returns and remains available at the specified reporting time.
-5. Staff record the candidate's progress through the recruitment process.
+1. A hiring company creates a drive, chooses registration fields, and orders its interview rounds.
+2. WalkIn generates a public registration link and venue-ready QR code.
+3. Candidates scan the QR code, submit the requested details, and privately choose how early and
+   through which channel they want to be notified.
+4. Recruiters manage the live queue while candidates remain available at their specified time.
+5. Staff record progress through the recruitment process without seeing another company's data.
 
 ## Core features
 
@@ -33,7 +34,8 @@ manage the drive from a single system.
 - Candidate notification-channel and advance-notice preferences
 - Interview reporting-time and round-status persistence
 - Candidate selection and recruitment-progress tracking
-- Role-based access for administrators and recruiters
+- Tenant-isolated access for platform administrators, company administrators, and recruiters
+- Hiring-drive setup with configurable forms, ordered rounds, public links, and QR codes
 
 ## Product status
 
